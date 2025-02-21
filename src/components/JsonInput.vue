@@ -89,7 +89,6 @@ h2 {
   align-items: center;
   gap: 16px;
   margin-top: 12px;
-  justify-content: flex-start;
 }
 
 .sort-checkbox {
@@ -99,10 +98,13 @@ h2 {
   color: white;
   cursor: pointer;
   user-select: none;
-  margin-left: auto;
 }
 
 .sort-checkbox input {
   cursor: pointer;
+}
+
+.spacer {
+  flex: 1;
 }
 </style>
