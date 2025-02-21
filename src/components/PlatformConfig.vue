@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { ConfigurationData } from '../types'
 
 const props = defineProps<{
@@ -10,9 +10,56 @@ const emit = defineEmits<{
   'update': [newConfig: ConfigurationData]
 }>()
 
+// Helper function to validate version format (major.minor.patch)
+const isValidVersion = (version: string): boolean => {
+  const versionRegex = /^\d+\.\d+\.\d+$/
+  return versionRegex.test(version.trim())
+}
+
+// Helper function to validate manifest version format (major.minor)
+const isValidManifestVersion = (version: string): boolean => {
+  const versionRegex = /^\d+\.\d+$/
+  return versionRegex.test(version.trim())
+}
+
+// Helper function to validate platform image format (ghcr.io/virtocommerce/platform)
+const isValidPlatformImage = (image: string): boolean => {
+  const imageRegex = /^[\w.-]+\.\w+\/[\w.-]+(\/[\w.-]+)?$/
+  return imageRegex.test(image.trim())
+}
+
+// Computed property to check for invalid fields
+const hasInvalidInputs = computed(() => {
+  return !props.config.ManifestVersion.trim() || (props.config.ManifestVersion.trim() && !isValidManifestVersion(props.config.ManifestVersion)) ||
+    !props.config.PlatformVersion.trim() || (props.config.PlatformVersion.trim() && !isValidVersion(props.config.PlatformVersion)) ||
+    !props.config.PlatformImage.trim() || (props.config.PlatformImage.trim() && !isValidPlatformImage(props.config.PlatformImage)) ||
+    !props.config.PlatformImageTag.trim() || (props.config.PlatformImageTag.trim() && !isValidVersion(props.config.PlatformImageTag))
+})
+
+// Method to scroll to first invalid input
+const scrollToFirstInvalidInput = () => {
+  const firstInvalidInput = document.querySelector('.platform-config .error') as HTMLElement
+  if (firstInvalidInput) {
+    firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    firstInvalidInput.focus()
+  }
+}
+
+// Expose these to parent
+defineExpose({
+  hasInvalidInputs,
+  scrollToFirstInvalidInput
+})
+
 const updateField = (field: keyof ConfigurationData, value: any) => {
+  const trimmedValue = value.trim()
+
   const newConfig = { ...props.config }
-  newConfig[field] = value
+  if (field === 'ModuleSources') {
+    newConfig[field] = value
+  } else {
+    newConfig[field] = trimmedValue
+  }
   emit('update', newConfig)
 }
 </script>
@@ -26,7 +73,13 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
         <input
           type="text"
           :value="config.ManifestVersion"
+          :class="{
+            'error': !config.ManifestVersion.trim() ||
+                    (config.ManifestVersion.trim() && !isValidManifestVersion(config.ManifestVersion))
+          }"
+          :title="config.ManifestVersion.trim() && !isValidManifestVersion(config.ManifestVersion) ? 'Format should be: major.minor (e.g., 2.0)' : ''"
           @input="(e) => updateField('ManifestVersion', (e.target as HTMLInputElement).value)"
+          @blur="(e) => e.target.value = e.target.value.trim()"
         />
       </div>
 
@@ -35,7 +88,13 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
         <input
           type="text"
           :value="config.PlatformVersion"
+          :class="{
+            'error': !config.PlatformVersion.trim() ||
+                    (config.PlatformVersion.trim() && !isValidVersion(config.PlatformVersion))
+          }"
+          :title="config.PlatformVersion.trim() && !isValidVersion(config.PlatformVersion) ? 'Format should be: major.minor.patch (e.g., 3.809.0)' : ''"
           @input="(e) => updateField('PlatformVersion', (e.target as HTMLInputElement).value)"
+          @blur="(e) => e.target.value = e.target.value.trim()"
         />
       </div>
 
@@ -44,7 +103,13 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
         <input
           type="text"
           :value="config.PlatformImage"
+          :class="{
+            'error': !config.PlatformImage.trim() ||
+                    (config.PlatformImage.trim() && !isValidPlatformImage(config.PlatformImage))
+          }"
+          :title="config.PlatformImage.trim() && !isValidPlatformImage(config.PlatformImage) ? 'Format should be: domain/org or domain/org/repo (e.g., ghcr.io/virtocommerce or ghcr.io/virtocommerce/platform)' : ''"
           @input="(e) => updateField('PlatformImage', (e.target as HTMLInputElement).value)"
+          @blur="(e) => e.target.value = e.target.value.trim()"
         />
       </div>
 
@@ -53,7 +118,13 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
         <input
           type="text"
           :value="config.PlatformImageTag"
+          :class="{
+            'error': !config.PlatformImageTag.trim() ||
+                    (config.PlatformImageTag.trim() && !isValidVersion(config.PlatformImageTag))
+          }"
+          :title="config.PlatformImageTag.trim() && !isValidVersion(config.PlatformImageTag) ? 'Format should be: major.minor.patch (e.g., 3.809.0)' : ''"
           @input="(e) => updateField('PlatformImageTag', (e.target as HTMLInputElement).value)"
+          @blur="(e) => e.target.value = e.target.value.trim()"
         />
       </div>
 
@@ -63,6 +134,7 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
           type="text"
           :value="config.PlatformAssetUrl"
           @input="(e) => updateField('PlatformAssetUrl', (e.target as HTMLInputElement).value)"
+          @blur="(e) => e.target.value = e.target.value.trim()"
         />
       </div>
 
@@ -135,5 +207,15 @@ input:focus, textarea:focus {
 
 textarea {
   resize: vertical;
+}
+
+input.error {
+  border-color: #d32f2f;
+  background-color: #fff5f5;
+}
+
+input.error:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
 }
 </style>

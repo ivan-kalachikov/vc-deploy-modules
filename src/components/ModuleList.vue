@@ -90,17 +90,25 @@ watch(() => props.config, (newConfig) => {
   }
 }, { immediate: true })
 
+// Helper function to validate version format (major.minor.patch)
+const isValidVersion = (version: string): boolean => {
+  const versionRegex = /^\d+\.\d+\.\d+$/
+  return versionRegex.test(version.trim())
+}
+
 const handleInputChange = (moduleId: string, type: ModuleType, value: string) => {
+  const trimmedValue = value.trim()
+
   // Update local view model:
   const module = modules.value.find(m => m.id === moduleId && m.sourceType === type)
   if (module) {
-    module.value = value
+    module.value = trimmedValue
   }
 
   // Construct full value for Azure Blob (add prefix):
   const fullValue = type === 'GithubReleases'
-    ? value
-    : `${moduleId}_${value}`
+    ? trimmedValue
+    : `${moduleId}_${trimmedValue}`
 
   emit('module-update', moduleId, type, fullValue)
 }
@@ -126,9 +134,15 @@ const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) 
     emit('module-update', moduleId, toType, '');               // Add to new source (will store BlobName as moduleId_ if empty)
 };
 
-// Computed property to check for invalid fields
+// Update hasInvalidInputs to include version format validation
 const hasInvalidInputs = computed(() => {
-  return modules.value.some(module => !module.value.trim())
+  return modules.value.some(module => {
+    if (!module.value.trim()) return true
+    if (module.sourceType === 'GithubReleases' && module.value.trim()) {
+      return !isValidVersion(module.value)
+    }
+    return false
+  })
 })
 
 // Method to scroll to first invalid input
@@ -182,12 +196,19 @@ defineExpose({
                   type="text"
                   :value="module.value"
                   :placeholder="sourceType === 'GithubReleases' ? 'Version' : 'Full filename'"
-                  :class="{ 'error': !module.value.trim() }"
+                  :class="{
+                    'error': !module.value.trim() ||
+                            (sourceType === 'GithubReleases' &&
+                             module.value.trim() &&
+                             !isValidVersion(module.value))
+                  }"
+                  :title="sourceType === 'GithubReleases' ? 'Format should be: major.minor.patch (e.g., 3.809.0)' : ''"
                   @input="(e) => handleInputChange(
                     module.id,
                     sourceType as ModuleType,
                     (e.target as HTMLInputElement).value
                   )"
+                  @blur="(e) => e.target.value = e.target.value.trim()"
                 />
               </div>
             </div>

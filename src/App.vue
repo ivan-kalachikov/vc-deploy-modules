@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { ConfigurationData, ModuleType, ModuleBase } from './types'
 import JsonInput from './components/JsonInput.vue'
 import ModuleList from './components/ModuleList.vue'
@@ -10,6 +10,7 @@ const originalConfig = ref<ConfigurationData | null>(null)
 const jsonError = ref<string>('')
 const showDiff = ref(true)
 const moduleListRef = ref()
+const platformConfigRef = ref()
 
 const handleJsonSubmit = (jsonString: string) => {
   try {
@@ -221,6 +222,18 @@ const generateDiffDescription = () => {
 
   return changes.length ? changes.join('\n') : 'No changes'
 }
+
+const hasInvalidInputs = computed(() => {
+  return moduleListRef.value?.hasInvalidInputs || platformConfigRef.value?.hasInvalidInputs
+})
+
+const scrollToFirstInvalidInput = () => {
+  if (platformConfigRef.value?.hasInvalidInputs) {
+    platformConfigRef.value.scrollToFirstInvalidInput()
+  } else if (moduleListRef.value?.hasInvalidInputs) {
+    moduleListRef.value.scrollToFirstInvalidInput()
+  }
+}
 </script>
 
 <template>
@@ -235,6 +248,7 @@ const generateDiffDescription = () => {
       <div class="main-layout">
         <div class="config-column">
           <PlatformConfig
+            ref="platformConfigRef"
             :config="config"
             @update="handlePlatformUpdate"
           />
@@ -250,10 +264,10 @@ const generateDiffDescription = () => {
               <h2>Generated JSON</h2>
               <div class="json-actions">
                 <button
-                  v-if="moduleListRef?.hasInvalidInputs"
+                  v-if="hasInvalidInputs"
                   class="action-button error-button"
-                  title="Some modules have invalid values"
-                  @click="moduleListRef.scrollToFirstInvalidInput()"
+                  title="Some fields have invalid values"
+                  @click="scrollToFirstInvalidInput()"
                 >
                   ⚠️
                 </button>
