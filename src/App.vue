@@ -128,111 +128,110 @@ const copyToClipboard = async () => {
   }
 }
 
-const generateDiffDescription = () => {
-  if (!config.value || !originalConfig.value) return ''
+// Add new block for diff items
+interface DiffItem {
+  moduleId?: string
+  text: string
+}
 
-  const changes: string[] = []
+const diffItems = computed<DiffItem[]>(() => {
+  const items: DiffItem[] = []
+  if (!config.value || !originalConfig.value) return items
 
-  // Helper function to format version changes
-  const formatVersionChange = (oldVersion: string, newVersion: string) => {
-    return `<span class="old-version">${oldVersion}</span> → <span class="new-version">${newVersion}</span>`
-  }
-
-  // Check manifest and platform changes
+  // Platform changes:
   if (config.value.ManifestVersion !== originalConfig.value.ManifestVersion) {
-    changes.push(`• Manifest Version: ${formatVersionChange(originalConfig.value.ManifestVersion, config.value.ManifestVersion)}`)
+    items.push({
+      text: `Manifest Version changed from <span class="old-version">${originalConfig.value.ManifestVersion}</span> to <span class="new-version">${config.value.ManifestVersion}</span>`
+    })
   }
-
   if (config.value.PlatformVersion !== originalConfig.value.PlatformVersion) {
-    changes.push(`• Platform Version: ${formatVersionChange(originalConfig.value.PlatformVersion, config.value.PlatformVersion)}`)
+    items.push({
+      text: `Platform Version changed from <span class="old-version">${originalConfig.value.PlatformVersion}</span> to <span class="new-version">${config.value.PlatformVersion}</span>`
+    })
   }
-
   if (config.value.PlatformImage !== originalConfig.value.PlatformImage) {
-    changes.push(`• Platform Image: ${formatVersionChange(originalConfig.value.PlatformImage, config.value.PlatformImage)}`)
+    items.push({
+      text: `Platform Image changed from <span class="old-version">${originalConfig.value.PlatformImage}</span> to <span class="new-version">${config.value.PlatformImage}</span>`
+    })
   }
-
   if (config.value.PlatformImageTag !== originalConfig.value.PlatformImageTag) {
-    changes.push(`• Platform Image Tag: ${formatVersionChange(originalConfig.value.PlatformImageTag, config.value.PlatformImageTag)}`)
+    items.push({
+      text: `Platform Image Tag changed from <span class="old-version">${originalConfig.value.PlatformImageTag}</span> to <span class="new-version">${config.value.PlatformImageTag}</span>`
+    })
   }
-
   if (config.value.PlatformAssetUrl !== originalConfig.value.PlatformAssetUrl) {
-    changes.push(`• Platform Asset URL: ${formatVersionChange(originalConfig.value.PlatformAssetUrl, config.value.PlatformAssetUrl)}`)
+    items.push({
+      text: `Platform Asset URL changed from <span class="old-version">${originalConfig.value.PlatformAssetUrl}</span> to <span class="new-version">${config.value.PlatformAssetUrl}</span>`
+    })
   }
 
-  // Check Module Sources changes
-  if (config.value.ModuleSources[0] !== originalConfig.value.ModuleSources[0]) {
-    changes.push(`• Module Sources: ${formatVersionChange(originalConfig.value.ModuleSources[0], config.value.ModuleSources[0])}`)
-  }
-
-  // Helper function to get version from any module
-  const getVersion = (module: ModuleBase, type: string) => {
-    if (type === 'GithubReleases') {
-      return module.Version || '(none)'
-    } else {
-      if (!module.BlobName) return '(none)'
-      const parts = module.BlobName.split('_')
-      return parts.length > 1 ? parts[1] : '(none)'
-    }
-  }
-
-  // Track all modules to detect moves between sources
-  const processedModules = new Set<string>()
-
-  // Check each source for changes
-  config.value.Sources.forEach((source: {
-    Name: string,
-    Modules: ModuleBase[]
-  }) => {
-
+  // Module changes:
+  config.value.Sources.forEach(source => {
     source.Modules.forEach(module => {
       const moduleId = module.Id || module.BlobName?.split('_')[0] || ''
-      processedModules.add(moduleId)
-
-      let originalModule: ModuleBase | null = null
-      let originalSourceType: string | null = null
-
+      if (!moduleId) return
+      let originalModule: ModuleBase | undefined
+      let originalSourceName: string | undefined
       originalConfig.value?.Sources.forEach(origSource => {
         const found = origSource.Modules.find(m =>
           origSource.Name === 'GithubReleases' ? m.Id === moduleId : m.BlobName?.startsWith(moduleId)
         )
         if (found) {
           originalModule = found
-          originalSourceType = origSource.Name
+          originalSourceName = origSource.Name
         }
       })
 
       if (!originalModule) {
-        changes.push(`• ${moduleId}: added to ${source.Name}`)
-      } else if (originalSourceType !== source.Name) {
-        const oldVersion = getVersion(originalModule, originalSourceType!)
-        const newVersion = getVersion(module, source.Name)
-        changes.push(`• ${moduleId}: moved from ${originalSourceType} to ${source.Name} (${formatVersionChange(oldVersion, newVersion)})`)
+        items.push({
+          moduleId,
+          text: `added to ${source.Name}`
+        })
+      } else if (originalSourceName !== source.Name) {
+        items.push({
+          moduleId,
+          text: `moved from ${originalSourceName} with ${
+            originalSourceName === 'GithubReleases'
+              ? `<span class="old-version">${originalModule.Version || '(none)'}</span>`
+              : `<span class="old-version">${originalModule.BlobName?.split('_')[1] || '(none)'}</span>`
+          } to ${source.Name} with ${
+            source.Name === 'GithubReleases'
+              ? `<span class="new-version">${module.Version || '(none)'}</span>`
+              : `<span class="new-version">${module.BlobName?.split('_')[1] || '(none)'}</span>`
+          }`
+        })
       } else if (source.Name === 'GithubReleases') {
-        const typedOriginalModule = originalModule as { Version?: string }
-        if (typedOriginalModule.Version !== (module as { Version?: string }).Version) {
-          changes.push(`• ${moduleId}: ${formatVersionChange(typedOriginalModule.Version || '(none)', (module as { Version?: string }).Version || '(none)')}`)
+        if (originalModule.Version !== module.Version) {
+          items.push({
+            moduleId,
+            text: `version changed from <span class="old-version">${originalModule.Version || '(none)'}</span> to <span class="new-version">${module.Version || '(none)'}</span>`
+          })
         }
       } else {
-        const currentVersion = getVersion(module, source.Name)
-        const originalVersion = getVersion(originalModule, source.Name)
-        if (currentVersion !== originalVersion) {
-          changes.push(`• ${moduleId}: ${formatVersionChange(originalVersion, currentVersion)}`)
+        if (originalModule.BlobName !== module.BlobName) {
+          items.push({
+            moduleId,
+            text: `BlobName changed from <span class="old-version">${originalModule.BlobName || '(none)'}</span> to <span class="new-version">${module.BlobName || '(none)'}</span>`
+          })
         }
       }
     })
   })
 
-  // Check for removed modules
-  originalConfig.value.Sources.forEach(originalSource => {
-    originalSource.Modules.forEach(originalModule => {
-      const moduleId = originalModule.Id || originalModule.BlobName?.split('_')[0] || ''
-      if (!processedModules.has(moduleId)) {
-        changes.push(`• ${moduleId}: removed from ${originalSource.Name}`)
-      }
-    })
-  })
+  return items
+})
 
-  return changes.length ? changes.join('\n') : 'No changes'
+// New helper: scroll to module field
+const scrollToModule = (moduleId?: string) => {
+  if (!moduleId) return
+  const id = moduleId.trim()
+  const el = document.querySelector(`[data-module-id="${id}"]`) as HTMLElement
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Optional: highlight the field briefly
+    el.classList.add('highlight')
+    setTimeout(() => el.classList.remove('highlight'), 2000)
+  }
 }
 
 const hasInvalidInputs = computed(() => {
@@ -301,7 +300,23 @@ const scrollToFirstInvalidInput = () => {
             </div>
             <div v-if="showDiff" class="diff-preview">
               <h3>Changes:</h3>
-              <pre class="diff-text" v-html="generateDiffDescription()"></pre>
+              <ul>
+                <li v-for="(item, index) in diffItems" :key="index">
+                  <template v-if="item.moduleId">
+                    <button
+                      class="module-id-button"
+                      @click="scrollToModule(item.moduleId)"
+                    >
+                      {{ item.moduleId }}
+                    </button>
+                    <span>: </span>
+                    <span v-html="item.text"></span>
+                  </template>
+                  <template v-else>
+                    <span v-html="item.text"></span>
+                  </template>
+                </li>
+              </ul>
             </div>
             <pre>{{ generateJson() }}</pre>
           </div>
@@ -446,56 +461,64 @@ h1 {
   font-weight: bold;
 }
 
-.diff-text {
+.diff-preview ul {
+  list-style: none;
+  padding: 0;
   margin: 0;
-  font-family: monospace;
+}
+
+.diff-preview li {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  color: #444;
   font-size: 14px;
   line-height: 1.5;
-  white-space: pre-wrap;
 }
 
-.diff-text :deep(.old-version) {
-  color: #d32f2f;
+.diff-preview li:last-child {
+  border-bottom: none;
+}
+
+.module-id-button {
+  background: none;
+  border: none;
+  color: #0066cc;
+  cursor: pointer;
+  font-family: monospace;
+  font-weight: 500;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.module-id-button:hover {
+  color: #004999;
+}
+
+/* Update colors for old/new versions */
+:deep(.old-version) {
+  color: #cc0000;
   text-decoration: line-through;
   padding: 0 2px;
+  background-color: #ffebee;
 }
 
-.diff-text :deep(.new-version) {
-  color: #2e7d32;
+:deep(.new-version) {
+  color: #1b5e20;
   padding: 0 2px;
   font-weight: bold;
+  background-color: #e8f5e9;
 }
 
-.copy-button {
-  padding: 8px 16px;
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: background-color 0.2s;
+/* Update highlight animation with better contrast */
+@keyframes highlight {
+  0% { background-color: transparent; }
+  20% { background-color: #fff0c0; }
+  80% { background-color: #fff0c0; }
+  100% { background-color: transparent; }
 }
 
-.copy-button:hover {
-  background: #0056b3;
-}
-
-.copy-button:active {
-  background: #004494;
-}
-
-.error-button {
-  color: #d32f2f;
-  border-color: #d32f2f;
-}
-
-.error-button:hover {
-  background: #fff5f5;
+:deep(.highlight) {
+  animation: highlight 2s ease-in-out;
 }
 </style>
 

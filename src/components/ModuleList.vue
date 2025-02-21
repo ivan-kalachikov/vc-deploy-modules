@@ -179,6 +179,7 @@ defineExpose({
               </select>
               <div class="input-container">
                 <input
+                  :data-module-id="module.id.trim()"
                   type="text"
                   :value="module.value"
                   :placeholder="sourceType === 'GithubReleases' ? 'Version' : 'Version with suffix (e.g., 3.806.0-pr-62-df9c.zip)'"
