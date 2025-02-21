@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import { ConfigurationData, ModuleType } from '../types'
+import type { Event } from '@vue/runtime-dom'
 
 interface ModuleWithId extends ModuleBase {
   _id?: string // Internal ID that remains constant
@@ -184,11 +185,10 @@ defineExpose({
             <div class="module-controls">
               <select
                 :value="sourceType"
-                @change="(e) => moveModule(
-                  module.id,
-                  sourceType as ModuleType,
-                  e.target.value as ModuleType
-                )"
+                @change="(e: Event) => {
+                  const target = e.target as HTMLSelectElement;
+                  moveModule(module.id, sourceType as ModuleType, target.value as ModuleType);
+                }"
               >
                 <option value="GithubReleases">GitHub Releases</option>
                 <option value="AzureBlob">Azure Blob</option>
@@ -208,12 +208,14 @@ defineExpose({
                   :title="sourceType === 'GithubReleases'
                     ? 'Format should be: major.minor.patch (e.g., 3.809.0)'
                     : 'Format should be: version[-suffix].zip (e.g., 3.806.0-pr-62-df9c.zip)'"
-                  @input="(e) => handleInputChange(
-                    module.id,
-                    sourceType as ModuleType,
-                    (e.target as HTMLInputElement).value
-                  )"
-                  @blur="(e) => e.target.value = e.target.value.trim()"
+                  @input="(e: Event) => {
+                    const target = e.target as HTMLInputElement;
+                    handleInputChange(module.id, sourceType as ModuleType, target.value);
+                  }"
+                  @blur="(e: Event) => {
+                    const target = e.target as HTMLInputElement;
+                    target.value = target.value.trim();
+                  }"
                 />
               </div>
             </div>

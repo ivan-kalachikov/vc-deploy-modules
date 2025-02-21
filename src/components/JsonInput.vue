@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { Event } from '@vue/runtime-dom'
 
 const props = defineProps<{
   error: string
@@ -16,15 +17,21 @@ const handleSubmit = () => {
   if (!jsonInput.value.trim()) return
   emit('submit', jsonInput.value, sortModules.value)
 }
+
+const handleTextareaInput = (e: Event) => {
+  const target = e.target as HTMLTextAreaElement
+  jsonInput.value = target.value
+}
 </script>
 
 <template>
   <div class="json-input">
     <h2>Paste your JSON configuration</h2>
     <textarea
-      v-model="jsonInput"
+      :value="jsonInput"
       rows="20"
       placeholder="Paste your JSON here..."
+      @input="handleTextareaInput"
     />
     <div v-if="error" class="error">{{ error }}</div>
     <div class="input-controls">
