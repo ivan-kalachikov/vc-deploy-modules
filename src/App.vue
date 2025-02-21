@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { ConfigurationData, ModuleType, ModuleBase } from './types'
+import type { ConfigurationData, ModuleType, ModuleBase } from './types'
 import JsonInput from './components/JsonInput.vue'
 import ModuleList from './components/ModuleList.vue'
 import PlatformConfig from './components/PlatformConfig.vue'
@@ -21,7 +21,7 @@ const handleJsonSubmit = (jsonString: string, sort: boolean) => {
     jsonError.value = ''
     shouldSortModules.value = sort
   } catch (e) {
-    jsonError.value = 'Invalid JSON format'
+    jsonError.value = 'Invalid JSON format' + (e as Error).message
   }
 }
 
@@ -29,12 +29,12 @@ const handleModuleUpdate = (moduleId: string, type: ModuleType, value: string) =
   if (!config.value) return
 
   const newConfig = JSON.parse(JSON.stringify(config.value))
-  const sourceIndex = newConfig.Sources.findIndex((s) => s.Name === type)
+  const sourceIndex = newConfig.Sources.findIndex((s: { Name: string }) => s.Name === type)
 
   if (sourceIndex === -1) return
 
   const source = newConfig.Sources[sourceIndex]
-  const moduleIndex = source.Modules.findIndex((m) =>
+  const moduleIndex = source.Modules.findIndex((m: ModuleBase) =>
     type === 'GithubReleases' ? m.Id === moduleId : m.BlobName?.startsWith(moduleId)
   )
 
@@ -75,8 +75,14 @@ const generateJson = () => {
 
     // Sort Sources array and their modules
     newConfig.Sources = newConfig.Sources
-      .sort((a, b) => a.Name.localeCompare(b.Name))
-      .map((source) => {
+      .sort((a: { Name: string }, b: { Name: string }) => a.Name.localeCompare(b.Name))
+      .map((source: {
+        Name: string,
+        Modules: ModuleBase[],
+        Container?: string,
+        ServiceUri?: string,
+        ModuleSources?: string[]
+      }) => {
         // First sort the modules array
         const sortedModules = [...source.Modules].sort((a, b) =>
           getModuleId(a).localeCompare(getModuleId(b))
@@ -90,7 +96,7 @@ const generateJson = () => {
                 ServiceUri: source.ServiceUri,
               }
             : {
-                ModuleSources: [...source.ModuleSources].sort(),
+                ModuleSources: source.ModuleSources ? [...source.ModuleSources].sort() : [],
               }
           ),
           Modules: sortedModules
@@ -159,7 +165,7 @@ const generateDiffDescription = () => {
   }
 
   // Helper function to get version from any module
-  const getVersion = (module: any, type: string) => {
+  const getVersion = (module: ModuleBase, type: string) => {
     if (type === 'GithubReleases') {
       return module.Version || '(none)'
     } else {
@@ -173,14 +179,16 @@ const generateDiffDescription = () => {
   const processedModules = new Set<string>()
 
   // Check each source for changes
-  config.value.Sources.forEach(source => {
-    const originalSource = originalConfig.value?.Sources.find(s => s.Name === source.Name)
+  config.value.Sources.forEach((source: {
+    Name: string,
+    Modules: ModuleBase[]
+  }) => {
 
     source.Modules.forEach(module => {
       const moduleId = module.Id || module.BlobName?.split('_')[0] || ''
       processedModules.add(moduleId)
 
-      let originalModule: any = null
+      let originalModule: ModuleBase | null = null
       let originalSourceType: string | null = null
 
       originalConfig.value?.Sources.forEach(origSource => {
@@ -200,8 +208,9 @@ const generateDiffDescription = () => {
         const newVersion = getVersion(module, source.Name)
         changes.push(`• ${moduleId}: moved from ${originalSourceType} to ${source.Name} (${formatVersionChange(oldVersion, newVersion)})`)
       } else if (source.Name === 'GithubReleases') {
-        if (originalModule.Version !== module.Version) {
-          changes.push(`• ${moduleId}: ${formatVersionChange(originalModule.Version || '(none)', module.Version || '(none)')}`)
+        const typedOriginalModule = originalModule as { Version?: string }
+        if (typedOriginalModule.Version !== (module as { Version?: string }).Version) {
+          changes.push(`• ${moduleId}: ${formatVersionChange(typedOriginalModule.Version || '(none)', (module as { Version?: string }).Version || '(none)')}`)
         }
       } else {
         const currentVersion = getVersion(module, source.Name)

@@ -1,13 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Event } from '@vue/runtime-dom'
-
-const props = defineProps<{
-  error: string
-}>()
 
 const jsonInput = ref('')
 const sortModules = ref(true)
+const error = ref('')
 
 const emit = defineEmits<{
   submit: [value: string, sort: boolean]

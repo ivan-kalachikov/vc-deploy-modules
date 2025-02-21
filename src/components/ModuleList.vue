@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { ConfigurationData, ModuleType } from '../types'
-import type { Event } from '@vue/runtime-dom'
-
-interface ModuleWithId extends ModuleBase {
-  _id?: string // Internal ID that remains constant
-}
+import type { ConfigurationData, ModuleType } from '../types'
 
 interface ModuleViewModel {
   id: string          // Module identifier (always the same as GitHub's Id)
@@ -23,17 +18,6 @@ const emit = defineEmits<{
 }>()
 
 const modules = ref<ModuleViewModel[]>([])
-
-// Helper function to get module ID
-const getModuleId = (module: ModuleWithId) => {
-  // If we already have an internal ID, use it
-  if (module._id) return module._id
-
-  // Otherwise, create one and store it
-  const id = module.Id || module.BlobName?.split('_')[0] || ''
-  module._id = id
-  return id
-}
 
 // Helper function to format module ID for display
 const formatModuleId = (id: string) => {

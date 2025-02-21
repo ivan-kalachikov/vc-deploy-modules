@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ConfigurationData } from '../types'
+import type { ConfigurationData } from '../types'
 
 const isExpanded = ref(false)
 const props = defineProps<{
@@ -52,15 +52,9 @@ defineExpose({
   scrollToFirstInvalidInput
 })
 
-const updateField = (field: keyof ConfigurationData, value: any) => {
-  const trimmedValue = value.trim()
-
+const updateField = <T extends keyof ConfigurationData>(field: T, value: ConfigurationData[T]) => {
   const newConfig = { ...props.config }
-  if (field === 'ModuleSources') {
-    newConfig[field] = value
-  } else {
-    newConfig[field] = trimmedValue
-  }
+  newConfig[field] = value
   emit('update', newConfig)
 }
 </script>
@@ -83,7 +77,10 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
           }"
           :title="config.ManifestVersion.trim() && !isValidManifestVersion(config.ManifestVersion) ? 'Format should be: major.minor (e.g., 2.0)' : ''"
           @input="(e) => updateField('ManifestVersion', (e.target as HTMLInputElement).value)"
-          @blur="(e) => e.target.value = e.target.value.trim()"
+          @blur="(e: FocusEvent) => {
+            const target = e.target as HTMLInputElement
+            target.value = target.value.trim()
+          }"
         />
       </div>
 
@@ -98,7 +95,10 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
           }"
           :title="config.PlatformVersion.trim() && !isValidVersion(config.PlatformVersion) ? 'Format should be: major.minor.patch (e.g., 3.809.0)' : ''"
           @input="(e) => updateField('PlatformVersion', (e.target as HTMLInputElement).value)"
-          @blur="(e) => e.target.value = e.target.value.trim()"
+          @blur="(e: FocusEvent) => {
+            const target = e.target as HTMLInputElement
+            target.value = target.value.trim()
+          }"
         />
       </div>
 
@@ -113,7 +113,10 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
           }"
           :title="config.PlatformImage.trim() && !isValidPlatformImage(config.PlatformImage) ? 'Format should be: domain/org or domain/org/repo (e.g., ghcr.io/virtocommerce or ghcr.io/virtocommerce/platform)' : ''"
           @input="(e) => updateField('PlatformImage', (e.target as HTMLInputElement).value)"
-          @blur="(e) => e.target.value = e.target.value.trim()"
+          @blur="(e: FocusEvent) => {
+            const target = e.target as HTMLInputElement
+            target.value = target.value.trim()
+          }"
         />
       </div>
 
@@ -128,7 +131,10 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
           }"
           :title="config.PlatformImageTag.trim() && !isValidVersion(config.PlatformImageTag) ? 'Format should be: major.minor.patch (e.g., 3.809.0)' : ''"
           @input="(e) => updateField('PlatformImageTag', (e.target as HTMLInputElement).value)"
-          @blur="(e) => e.target.value = e.target.value.trim()"
+          @blur="(e: FocusEvent) => {
+            const target = e.target as HTMLInputElement
+            target.value = target.value.trim()
+          }"
         />
       </div>
 
@@ -138,7 +144,10 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
           type="text"
           :value="config.PlatformAssetUrl"
           @input="(e) => updateField('PlatformAssetUrl', (e.target as HTMLInputElement).value)"
-          @blur="(e) => e.target.value = e.target.value.trim()"
+          @blur="(e: FocusEvent) => {
+            const target = e.target as HTMLInputElement
+            target.value = target.value.trim()
+          }"
         />
       </div>
 
