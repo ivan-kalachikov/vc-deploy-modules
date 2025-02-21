@@ -8,7 +8,7 @@ import PlatformConfig from './components/PlatformConfig.vue'
 const config = ref<ConfigurationData | null>(null)
 const originalConfig = ref<ConfigurationData | null>(null)
 const jsonError = ref<string>('')
-const showDiff = ref(false)
+const showDiff = ref(true)
 
 const handleJsonSubmit = (jsonString: string) => {
   try {
@@ -125,6 +125,32 @@ const generateDiffDescription = () => {
   // Helper function to format version changes
   const formatVersionChange = (oldVersion: string, newVersion: string) => {
     return `<span class="old-version">${oldVersion}</span> → <span class="new-version">${newVersion}</span>`
+  }
+
+  // Check manifest and platform changes
+  if (config.value.ManifestVersion !== originalConfig.value.ManifestVersion) {
+    changes.push(`• Manifest Version: ${formatVersionChange(originalConfig.value.ManifestVersion, config.value.ManifestVersion)}`)
+  }
+
+  if (config.value.PlatformVersion !== originalConfig.value.PlatformVersion) {
+    changes.push(`• Platform Version: ${formatVersionChange(originalConfig.value.PlatformVersion, config.value.PlatformVersion)}`)
+  }
+
+  if (config.value.PlatformImage !== originalConfig.value.PlatformImage) {
+    changes.push(`• Platform Image: ${formatVersionChange(originalConfig.value.PlatformImage, config.value.PlatformImage)}`)
+  }
+
+  if (config.value.PlatformImageTag !== originalConfig.value.PlatformImageTag) {
+    changes.push(`• Platform Image Tag: ${formatVersionChange(originalConfig.value.PlatformImageTag, config.value.PlatformImageTag)}`)
+  }
+
+  if (config.value.PlatformAssetUrl !== originalConfig.value.PlatformAssetUrl) {
+    changes.push(`• Platform Asset URL: ${formatVersionChange(originalConfig.value.PlatformAssetUrl, config.value.PlatformAssetUrl)}`)
+  }
+
+  // Check Module Sources changes
+  if (config.value.ModuleSources[0] !== originalConfig.value.ModuleSources[0]) {
+    changes.push(`• Module Sources: ${formatVersionChange(originalConfig.value.ModuleSources[0], config.value.ModuleSources[0])}`)
   }
 
   // Helper function to get version from any module
