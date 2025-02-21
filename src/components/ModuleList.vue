@@ -177,7 +177,7 @@ defineExpose({
             class="module-item"
           >
             <div class="module-info">
-              <span class="module-id">{{ formatModuleId(module.id) }}</span>
+              <span class="module-id" :title="formatModuleId(module.id)">{{ formatModuleId(module.id) }}</span>
             </div>
             <div class="module-controls">
               <select
@@ -250,8 +250,9 @@ defineExpose({
 
 .module-item {
   display: flex;
-  gap: 15px;
+  gap: 12px;
   align-items: center;
+  padding-right: 12px;
   background: white;
   padding: 10px;
   border-radius: 4px;
@@ -259,7 +260,7 @@ defineExpose({
 }
 
 .module-info {
-  min-width: 250px;
+  width: 30%;
   flex-shrink: 0;
   padding: 5px;
 }
@@ -277,23 +278,36 @@ defineExpose({
 
 .module-controls {
   display: flex;
-  gap: 10px;
-  flex: 1;
+  gap: 8px;
   align-items: center;
+  width: 70%;
+  min-width: 0;
 }
 
-.input-container {
-  flex: 1;
-  position: relative;
-}
-
-input, select {
+.module-controls select {
+  width: 37%;
   padding: 8px 12px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+  font-family: monospace;
   background: white;
+}
+
+.input-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.module-controls input {
   width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: monospace;
+  background: white;
+  min-width: 0;
 }
 
 input:focus, select:focus {
@@ -303,12 +317,7 @@ input:focus, select:focus {
 }
 
 select {
-  min-width: 150px;
   cursor: pointer;
-}
-
-input {
-  min-width: 300px;
 }
 
 input::placeholder {

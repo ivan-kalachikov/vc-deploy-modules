@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { ConfigurationData } from '../types'
 
+const isExpanded = ref(false)
 const props = defineProps<{
   config: ConfigurationData
 }>()
@@ -66,8 +67,11 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
 
 <template>
   <div class="platform-config">
-    <h2>Platform Configuration</h2>
-    <div class="config-grid">
+    <div class="section-header" @click="isExpanded = !isExpanded">
+      <h2>Platform Configuration</h2>
+      <span class="toggle-icon">{{ isExpanded ? '▼' : '▶' }}</span>
+    </div>
+    <div class="config-grid" v-show="isExpanded">
       <div class="config-item">
         <label>Manifest Version:</label>
         <input
@@ -157,18 +161,39 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
   padding: 20px;
   background: #f8f8f8;
   border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  padding-bottom: 4px;
+}
+
+.section-header:hover {
+  opacity: 0.8;
+}
+
+.toggle-icon {
+  font-size: 14px;
+  color: #666;
 }
 
 .platform-config h2 {
   color: #333;
-  margin-bottom: 20px;
+  margin: 0;
   font-weight: 600;
 }
 
 .config-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  margin-top: 12px;
 }
 
 .config-item {
@@ -179,10 +204,14 @@ const updateField = (field: keyof ConfigurationData, value: any) => {
   padding: 10px;
   border-radius: 4px;
   border: 1px solid #ddd;
+  min-width: 0;
+  overflow: hidden;
+  max-width: 100%;
 }
 
 .config-item.full-width {
   grid-column: 1 / -1;
+  max-width: none;
 }
 
 label {
@@ -197,6 +226,10 @@ input, textarea {
   font-size: 14px;
   font-family: monospace;
   background: white;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
 }
 
 input:focus, textarea:focus {

@@ -282,7 +282,7 @@ const scrollToFirstInvalidInput = () => {
                   <svg class="icon" viewBox="0 0 24 24" width="16" height="16">
                     <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                   </svg>
-                  Copy to Clipboard
+                  Copy
                 </button>
               </div>
             </div>
@@ -304,6 +304,7 @@ const scrollToFirstInvalidInput = () => {
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
+  max-width: 1800px;
 }
 
 .json-input-container {
@@ -321,7 +322,7 @@ h1 {
 
 .main-layout {
   display: grid;
-  grid-template-columns: minmax(800px, 1fr) minmax(400px, 600px);
+  grid-template-columns: minmax(550px, 2fr) minmax(350px, 1fr);
   gap: 30px;
   align-items: start;
   min-height: calc(100vh - 120px); /* Full height minus header and padding */
@@ -482,4 +483,29 @@ h1 {
 .error-button:hover {
   background: #fff5f5;
 }
+</style>
+
+<style>
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Remove or comment out the sidebar styles since they're not being used */
+/* .sidebar {
+  width: 800px;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  border-right: 1px solid #ddd;
+  background: white;
+}
+
+.main-content {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  padding: 20px;
+  background: #f5f5f5;
+} */
 </style>
