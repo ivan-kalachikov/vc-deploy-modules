@@ -427,10 +427,27 @@ h1 {
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
-  font-size: 16px; /* Increased font size for emoji */
+  font-size: 16px;
   line-height: 1;
   min-width: 35px;
   min-height: 35px;
+}
+
+.error-button {
+  background: #fff2f0;
+  border-color: #ffccc7;
+  color: #ff4d4f;
+}
+
+.error-button:hover {
+  background: #fff1f0;
+  border-color: #ffa39e;
+  color: #ff7875;
+  transform: scale(1.05);
+}
+
+.error-button:active {
+  transform: scale(0.95);
 }
 
 .action-button:hover {
@@ -438,8 +455,35 @@ h1 {
   transform: scale(1.05);
 }
 
-.action-button:active {
+.copy-button {
+  padding: 8px 12px;
+  background: v-bind(hasInvalidInputs ? '#ff7875' : '#52c41a');
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  height: 35px;
+}
+
+.copy-button:hover {
+  background: v-bind(hasInvalidInputs ? '#ff4d4f' : '#389e0d');
+  transform: scale(1.05);
+}
+
+.copy-button:active {
   transform: scale(0.95);
+}
+
+.copy-button .icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .icon {
@@ -482,7 +526,7 @@ h1 {
 .module-id-button {
   background: none;
   border: none;
-  color: #0066cc;
+  color: #4a6ee0;
   cursor: pointer;
   font-family: monospace;
   font-weight: 500;
@@ -491,7 +535,7 @@ h1 {
 }
 
 .module-id-button:hover {
-  color: #004999;
+  color: #3d5bc4;
 }
 
 /* Update colors for old/new versions */
