@@ -1,6 +1,10 @@
 {
-  "name": "delpoy-modules-gui",
+  "name": "module-configuration-manager",
   "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivan-kalachikov/vc-deploy-modules"
+  },
   "private": true,
   "type": "module",
   "scripts": {
@@ -14,6 +18,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "gh-pages": "^6.3.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
