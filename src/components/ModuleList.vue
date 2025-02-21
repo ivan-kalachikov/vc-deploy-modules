@@ -2,6 +2,16 @@
 import { ref, watch, computed } from 'vue'
 import { ConfigurationData, ModuleType } from '../types'
 
+interface ModuleWithId extends ModuleBase {
+  _id?: string // Internal ID that remains constant
+}
+
+interface ModuleViewModel {
+  id: string          // Module identifier (always the same as GitHub's Id)
+  value: string       // Current input value
+  sourceType: string  // 'GithubReleases' or 'AzureBlob'
+}
+
 const props = defineProps<{
   config: ConfigurationData
 }>()
@@ -10,13 +20,17 @@ const emit = defineEmits<{
   'module-update': [moduleId: string, type: ModuleType, value: string]
 }>()
 
-// Local state for input values
-const inputValues = ref<Record<string, string>>({})
+const modules = ref<ModuleViewModel[]>([])
 
 // Helper function to get module ID
-const getModuleId = (module: any) => {
-  if (module.Id) return module.Id
-  return module.BlobName?.split('_')[0] || ''
+const getModuleId = (module: ModuleWithId) => {
+  // If we already have an internal ID, use it
+  if (module._id) return module._id
+
+  // Otherwise, create one and store it
+  const id = module.Id || module.BlobName?.split('_')[0] || ''
+  module._id = id
+  return id
 }
 
 // Computed sorted sources
@@ -24,72 +38,109 @@ const sortedSources = computed(() => {
   return props.config.Sources.map(source => ({
     ...source,
     Modules: [...source.Modules].sort((a, b) =>
-      getModuleId(a).localeCompare(getModuleId(b))
+      getModuleId(a as ModuleWithId).localeCompare(getModuleId(b as ModuleWithId))
     )
   }))
 })
 
-// Initialize input values from props
-watch(() => props.config, (newConfig) => {
-  newConfig.Sources.forEach(source => {
+// Convert config data to view models
+const updateModules = (config: ConfigurationData) => {
+  const viewModels: ModuleViewModel[] = []
+
+  config.Sources.forEach(source => {
     source.Modules.forEach(module => {
-      const moduleId = getModuleId(module)
-      const value = source.Name === 'GithubReleases' ? module.Version : module.BlobName
-      inputValues.value[`${moduleId}-${source.Name}`] = value || ''
+      // Consistent ID handling:
+      const moduleId = source.Name === 'GithubReleases'
+        ? module.Id
+        : module.BlobName?.split('_')[0]
+
+      if (!moduleId) return // Skip invalid modules
+
+      // Get the value part (no .zip handling):
+      const value = source.Name === 'GithubReleases'
+        ? module.Version || ''
+        : module.BlobName?.split('_')[1] || ''
+
+      viewModels.push({
+        id: moduleId,
+        value: value,
+        sourceType: source.Name
+      })
     })
   })
+
+  // Use spread to trigger reactivity:
+  modules.value = [...viewModels]
+}
+
+// Watch for config changes
+watch(() => props.config, (newConfig) => {
+  if (newConfig) {
+    updateModules(newConfig)
+  }
 }, { immediate: true })
 
 const handleInputChange = (moduleId: string, type: ModuleType, value: string) => {
-  inputValues.value[`${moduleId}-${type}`] = value
-  emit('module-update', moduleId, type, value)
+  // Update local view model:
+  const module = modules.value.find(m => m.id === moduleId && m.sourceType === type)
+  if (module) {
+    module.value = value  // Directly update the value
+  }
+
+  // Construct full value for Azure Blob (add prefix):
+  const fullValue = type === 'GithubReleases'
+    ? value
+    : value ? `${moduleId}_${value}` : ''
+
+  emit('module-update', moduleId, type, fullValue)
 }
 
 const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) => {
-  const module = props.config.Sources.find(s => s.Name === fromType)?.Modules
-    .find(m => (fromType === 'GithubReleases' ? m.Id === moduleId : m.BlobName?.startsWith(moduleId)))
+    // Find the index of the module in our view models:
+    const existingModuleIndex = modules.value.findIndex(m => m.id === moduleId && m.sourceType === fromType);
+    if (existingModuleIndex !== -1) {
+        // Remove from the old source, using splice to trigger reactivity:
+        modules.value.splice(existingModuleIndex, 1);
+    }
+    // Create a new module object for the target source with an empty value:
+    const newModule: ModuleViewModel = {
+        id: moduleId,
+        value: '',
+        sourceType: toType,
+    };
+    // Add the new module:
+    modules.value.push(newModule);
 
-  if (!module) return
-
-  // Create new module object for the target type
-  const newModule: typeof module = {}
-  if (toType === 'GithubReleases') {
-    newModule.Id = moduleId
-    newModule.Version = module.Version || ''
-  } else {
-    newModule.BlobName = module.BlobName || `${moduleId}_0.0.0.zip`
-  }
-
-  // Remove from old type and add to new type
-  emit('module-update', moduleId, fromType, '__DELETE__') // Special value to remove
-  emit('module-update', moduleId, toType, toType === 'GithubReleases' ? newModule.Version : newModule.BlobName)
-}
-
-const getModuleValue = (module: any, sourceName: string) => {
-  return sourceName === 'GithubReleases' ? module.Version : module.BlobName
-}
+    // Emit updates to the parent:
+    emit('module-update', moduleId, fromType, '__DELETE__'); // Remove from old source
+    emit('module-update', moduleId, toType, '');               // Add to new source (will store BlobName as moduleId_ if empty)
+};
 </script>
 
 <template>
   <div class="module-list">
-    <div v-for="source in sortedSources" :key="source.Name" class="source-section">
+    <div
+      v-for="sourceType in ['AzureBlob', 'GithubReleases']"
+      :key="sourceType"
+      class="source-section"
+    >
       <div class="section-container">
-        <h2>{{ source.Name === 'AzureBlob' ? 'Azure Blob Storage' : 'GitHub Releases' }}</h2>
+        <h2>{{ sourceType === 'AzureBlob' ? 'Azure Blob Storage' : 'GitHub Releases' }}</h2>
         <div class="modules">
           <div
-            v-for="module in source.Modules"
-            :key="getModuleId(module)"
+            v-for="module in modules.filter(m => m.sourceType === sourceType)"
+            :key="module.id + '-' + module.sourceType"
             class="module-item"
           >
             <div class="module-info">
-              <span class="module-id">{{ getModuleId(module) }}</span>
+              <span class="module-id">{{ module.id }}</span>
             </div>
             <div class="module-controls">
               <select
-                :value="source.Name"
+                :value="sourceType"
                 @change="(e) => moveModule(
-                  getModuleId(module),
-                  source.Name as ModuleType,
+                  module.id,
+                  sourceType as ModuleType,
                   e.target.value as ModuleType
                 )"
               >
@@ -99,11 +150,11 @@ const getModuleValue = (module: any, sourceName: string) => {
               <div class="input-container">
                 <input
                   type="text"
-                  :value="inputValues[`${getModuleId(module)}-${source.Name}`]"
-                  :placeholder="source.Name === 'GithubReleases' ? 'Version' : 'Blob Name'"
+                  :value="module.value"
+                  :placeholder="sourceType === 'GithubReleases' ? 'Version' : 'Full filename'"
                   @input="(e) => handleInputChange(
-                    getModuleId(module),
-                    source.Name as ModuleType,
+                    module.id,
+                    sourceType as ModuleType,
                     (e.target as HTMLInputElement).value
                   )"
                 />

@@ -6,12 +6,15 @@ import ModuleList from './components/ModuleList.vue'
 import PlatformConfig from './components/PlatformConfig.vue'
 
 const config = ref<ConfigurationData | null>(null)
+const originalConfig = ref<ConfigurationData | null>(null)
 const jsonError = ref<string>('')
+const showDiff = ref(false)
 
 const handleJsonSubmit = (jsonString: string) => {
   try {
     const parsed = JSON.parse(jsonString)
     config.value = parsed
+    originalConfig.value = JSON.parse(jsonString)
     jsonError.value = ''
   } catch (e) {
     jsonError.value = 'Invalid JSON format'
@@ -21,7 +24,7 @@ const handleJsonSubmit = (jsonString: string) => {
 const handleModuleUpdate = (moduleId: string, type: ModuleType, value: string) => {
   if (!config.value) return
 
-  const newConfig = JSON.parse(JSON.stringify(config.value)) // Use JSON parse/stringify instead of structuredClone
+  const newConfig = JSON.parse(JSON.stringify(config.value))
   const sourceIndex = newConfig.Sources.findIndex((s) => s.Name === type)
 
   if (sourceIndex === -1) return
@@ -32,21 +35,18 @@ const handleModuleUpdate = (moduleId: string, type: ModuleType, value: string) =
   )
 
   if (value === '__DELETE__') {
-    // Remove module from this source
     source.Modules.splice(moduleIndex, 1)
   } else if (moduleIndex === -1) {
-    // Add new module to this source
-    source.Modules.push(
-      type === 'GithubReleases'
-        ? { Id: moduleId, Version: value }
-        : { BlobName: value }
-    )
+    const newModule = type === 'GithubReleases'
+      ? { Id: moduleId, Version: value }
+      : { BlobName: value || `${moduleId}_` }
+    source.Modules.push(newModule)
   } else {
-    // Update existing module
+    const module = source.Modules[moduleIndex]
     if (type === 'GithubReleases') {
-      (source.Modules[moduleIndex] as ModuleBase).Version = value
+      module.Version = value
     } else {
-      (source.Modules[moduleIndex] as ModuleBase).BlobName = value
+      module.BlobName = value || `${moduleId}_`
     }
   }
 
@@ -116,6 +116,84 @@ const copyToClipboard = async () => {
     console.error('Failed to copy text: ', err)
   }
 }
+
+const generateDiffDescription = () => {
+  if (!config.value || !originalConfig.value) return ''
+
+  const changes: string[] = []
+
+  // Helper function to format version changes
+  const formatVersionChange = (oldVersion: string, newVersion: string) => {
+    return `<span class="old-version">${oldVersion}</span> → <span class="new-version">${newVersion}</span>`
+  }
+
+  // Helper function to get version from any module
+  const getVersion = (module: any, type: string) => {
+    if (type === 'GithubReleases') {
+      return module.Version || '(none)'
+    } else {
+      if (!module.BlobName) return '(none)'
+      const parts = module.BlobName.split('_')
+      return parts.length > 1 ? parts[1] : '(none)'
+    }
+  }
+
+  // Track all modules to detect moves between sources
+  const processedModules = new Set<string>()
+
+  // Check each source for changes
+  config.value.Sources.forEach(source => {
+    const originalSource = originalConfig.value?.Sources.find(s => s.Name === source.Name)
+
+    source.Modules.forEach(module => {
+      const moduleId = module.Id || module.BlobName?.split('_')[0] || ''
+      processedModules.add(moduleId)
+
+      let originalModule: any = null
+      let originalSourceType: string | null = null
+
+      originalConfig.value?.Sources.forEach(origSource => {
+        const found = origSource.Modules.find(m =>
+          origSource.Name === 'GithubReleases' ? m.Id === moduleId : m.BlobName?.startsWith(moduleId)
+        )
+        if (found) {
+          originalModule = found
+          originalSourceType = origSource.Name
+        }
+      })
+
+      if (!originalModule) {
+        changes.push(`• ${moduleId}: added to ${source.Name}`)
+      } else if (originalSourceType !== source.Name) {
+        const oldVersion = getVersion(originalModule, originalSourceType!)
+        const newVersion = getVersion(module, source.Name)
+        changes.push(`• ${moduleId}: moved from ${originalSourceType} to ${source.Name} (${formatVersionChange(oldVersion, newVersion)})`)
+      } else if (source.Name === 'GithubReleases') {
+        if (originalModule.Version !== module.Version) {
+          changes.push(`• ${moduleId}: ${formatVersionChange(originalModule.Version || '(none)', module.Version || '(none)')}`)
+        }
+      } else {
+        const currentVersion = getVersion(module, source.Name)
+        const originalVersion = getVersion(originalModule, source.Name)
+        if (currentVersion !== originalVersion) {
+          changes.push(`• ${moduleId}: ${formatVersionChange(originalVersion, currentVersion)}`)
+        }
+      }
+    })
+  })
+
+  // Check for removed modules
+  originalConfig.value.Sources.forEach(originalSource => {
+    originalSource.Modules.forEach(originalModule => {
+      const moduleId = originalModule.Id || originalModule.BlobName?.split('_')[0] || ''
+      if (!processedModules.has(moduleId)) {
+        changes.push(`• ${moduleId}: removed from ${originalSource.Name}`)
+      }
+    })
+  })
+
+  return changes.length ? changes.join('\n') : 'No changes'
+}
 </script>
 
 <template>
@@ -137,9 +215,25 @@ const copyToClipboard = async () => {
           <div class="json-output">
             <div class="json-header">
               <h2>Generated JSON</h2>
-              <button class="copy-button" @click="copyToClipboard">
-                Copy to Clipboard
-              </button>
+              <div class="json-actions">
+                <button
+                  class="action-button"
+                  :title="showDiff ? 'Hide Changes' : 'Show Changes'"
+                  @click="showDiff = !showDiff"
+                >
+                  {{ showDiff ? '⬆️' : '⬇️' }}
+                </button>
+                <button class="copy-button" @click="copyToClipboard">
+                  <svg class="icon" viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                  </svg>
+                  Copy to Clipboard
+                </button>
+              </div>
+            </div>
+            <div v-if="showDiff" class="diff-preview">
+              <h3>Changes:</h3>
+              <pre class="diff-text" v-html="generateDiffDescription()"></pre>
             </div>
             <pre>{{ generateJson() }}</pre>
           </div>
@@ -223,6 +317,76 @@ h1 {
 
 .json-header h2 {
   margin-bottom: 0;
+}
+
+.json-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-button {
+  padding: 8px;
+  background: transparent;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 16px; /* Increased font size for emoji */
+  line-height: 1;
+  min-width: 35px;
+  min-height: 35px;
+}
+
+.action-button:hover {
+  background: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.action-button:active {
+  transform: scale(0.95);
+}
+
+.icon {
+  display: block;
+}
+
+.diff-preview {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.diff-preview h3 {
+  color: #333;
+  font-size: 14px;
+  margin: 0 0 10px 0;
+}
+
+.diff-text {
+  margin: 0;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.diff-text :deep(.old-version) {
+  color: #d32f2f;
+  text-decoration: line-through;
+  padding: 0 2px;
+}
+
+.diff-text :deep(.new-version) {
+  color: #2e7d32;
+  padding: 0 2px;
+  font-weight: bold;
 }
 
 .copy-button {
