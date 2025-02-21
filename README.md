@@ -1,45 +1,12 @@
-# delpoy-modules-gui
+# Module Configuration Manager
 
-This template should help get you started developing with Vue 3 in Vite.
+A web-based tool for managing VirtoCommerce deployment configurations. Provides a visual interface for editing [packages.json](https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json) used in [vc-deploy repositories](https://github.com/VirtoCommerce/vc-deploy-dev).
 
-## Recommended IDE Setup
+## Features
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
-
-## Type Support for `.vue` Imports in TS
-
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-yarn
-```
-
-### Compile and Hot-Reload for Development
-
-```sh
-yarn dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-yarn build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-yarn test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-yarn lint
-```
+- Edit platform settings and module versions
+- Switch between Azure Blob and GitHub Release sources
+- Version validation and change tracking
+- Real-time JSON preview with diff display
+- Optional module sorting
+- Copy to clipboard functionality
