@@ -96,6 +96,25 @@ const isValidVersion = (version: string): boolean => {
   return versionRegex.test(version.trim())
 }
 
+// Helper function to validate blob filename format (version-suffix.zip)
+const isValidBlobName = (name: string): boolean => {
+  const blobRegex = /^\d+\.\d+\.\d+(-[\w.-]+)?\.zip$/
+  return blobRegex.test(name.trim())
+}
+
+// Update hasInvalidInputs to include blob format validation
+const hasInvalidInputs = computed(() => {
+  return modules.value.some(module => {
+    if (!module.value.trim()) return true
+    if (module.value.trim()) {
+      return module.sourceType === 'GithubReleases'
+        ? !isValidVersion(module.value)
+        : !isValidBlobName(module.value)
+    }
+    return false
+  })
+})
+
 const handleInputChange = (moduleId: string, type: ModuleType, value: string) => {
   const trimmedValue = value.trim()
 
@@ -133,17 +152,6 @@ const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) 
     emit('module-update', moduleId, fromType, '__DELETE__'); // Remove from old source
     emit('module-update', moduleId, toType, '');               // Add to new source (will store BlobName as moduleId_ if empty)
 };
-
-// Update hasInvalidInputs to include version format validation
-const hasInvalidInputs = computed(() => {
-  return modules.value.some(module => {
-    if (!module.value.trim()) return true
-    if (module.sourceType === 'GithubReleases' && module.value.trim()) {
-      return !isValidVersion(module.value)
-    }
-    return false
-  })
-})
 
 // Method to scroll to first invalid input
 const scrollToFirstInvalidInput = () => {
@@ -195,14 +203,17 @@ defineExpose({
                 <input
                   type="text"
                   :value="module.value"
-                  :placeholder="sourceType === 'GithubReleases' ? 'Version' : 'Full filename'"
+                  :placeholder="sourceType === 'GithubReleases' ? 'Version' : 'Version with suffix (e.g., 3.806.0-pr-62-df9c.zip)'"
                   :class="{
                     'error': !module.value.trim() ||
-                            (sourceType === 'GithubReleases' &&
-                             module.value.trim() &&
-                             !isValidVersion(module.value))
+                            (module.value.trim() && (
+                              (sourceType === 'GithubReleases' && !isValidVersion(module.value)) ||
+                              (sourceType === 'AzureBlob' && !isValidBlobName(module.value))
+                            ))
                   }"
-                  :title="sourceType === 'GithubReleases' ? 'Format should be: major.minor.patch (e.g., 3.809.0)' : ''"
+                  :title="sourceType === 'GithubReleases'
+                    ? 'Format should be: major.minor.patch (e.g., 3.809.0)'
+                    : 'Format should be: version[-suffix].zip (e.g., 3.806.0-pr-62-df9c.zip)'"
                   @input="(e) => handleInputChange(
                     module.id,
                     sourceType as ModuleType,
