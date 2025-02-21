@@ -43,6 +43,11 @@ const sortedSources = computed(() => {
   }))
 })
 
+// Computed property to sort modules
+const sortedModules = computed(() => {
+  return [...modules.value].sort((a, b) => a.id.localeCompare(b.id))
+})
+
 // Convert config data to view models
 const updateModules = (config: ConfigurationData) => {
   const viewModels: ModuleViewModel[] = []
@@ -128,7 +133,7 @@ const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) 
         <h2>{{ sourceType === 'AzureBlob' ? 'Azure Blob Storage' : 'GitHub Releases' }}</h2>
         <div class="modules">
           <div
-            v-for="module in modules.filter(m => m.sourceType === sourceType)"
+            v-for="module in sortedModules.filter(m => m.sourceType === sourceType)"
             :key="module.id + '-' + module.sourceType"
             class="module-item"
           >

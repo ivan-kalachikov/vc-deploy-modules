@@ -200,7 +200,9 @@ const generateDiffDescription = () => {
   <div class="app">
     <h1>Module Configuration Manager</h1>
 
-    <JsonInput v-if="!config" :error="jsonError" @submit="handleJsonSubmit" />
+    <div v-if="!config" class="json-input-container">
+      <JsonInput :error="jsonError" @submit="handleJsonSubmit" />
+    </div>
 
     <template v-else>
       <div class="main-layout">
@@ -245,15 +247,22 @@ const generateDiffDescription = () => {
 
 <style scoped>
 .app {
-  max-width: 1800px;
+  width: 100%;
   margin: 0 auto;
   padding: 20px;
+  box-sizing: border-box;
+}
+
+.json-input-container {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
 }
 
 h1 {
-  color: #333;
+  color: white;
   margin-bottom: 30px;
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
 }
 

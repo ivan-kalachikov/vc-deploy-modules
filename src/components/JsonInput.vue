@@ -32,12 +32,23 @@ const handleSubmit = () => {
 
 <style scoped>
 .json-input {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 .json-input textarea {
   width: 100%;
   margin-bottom: 10px;
+  padding: 20px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 500px;
+  box-sizing: border-box;
+  text-align: left;
 }
 
 .error {
@@ -46,6 +57,8 @@ const handleSubmit = () => {
 }
 
 button {
+  width: fit-content;
+  margin: 0 auto;
   padding: 10px 20px;
   background: #007bff;
   color: white;
@@ -56,5 +69,13 @@ button {
 
 button:hover {
   background: #0056b3;
+}
+
+h2 {
+  color: white;
+  margin-bottom: 30px;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
 }
 </style>
