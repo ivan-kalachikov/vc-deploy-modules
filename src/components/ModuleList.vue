@@ -94,13 +94,13 @@ const handleInputChange = (moduleId: string, type: ModuleType, value: string) =>
   // Update local view model:
   const module = modules.value.find(m => m.id === moduleId && m.sourceType === type)
   if (module) {
-    module.value = value  // Directly update the value
+    module.value = value
   }
 
   // Construct full value for Azure Blob (add prefix):
   const fullValue = type === 'GithubReleases'
     ? value
-    : value ? `${moduleId}_${value}` : ''
+    : `${moduleId}_${value}`
 
   emit('module-update', moduleId, type, fullValue)
 }
@@ -125,6 +125,26 @@ const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) 
     emit('module-update', moduleId, fromType, '__DELETE__'); // Remove from old source
     emit('module-update', moduleId, toType, '');               // Add to new source (will store BlobName as moduleId_ if empty)
 };
+
+// Computed property to check for invalid fields
+const hasInvalidInputs = computed(() => {
+  return modules.value.some(module => !module.value.trim())
+})
+
+// Method to scroll to first invalid input
+const scrollToFirstInvalidInput = () => {
+  const firstInvalidInput = document.querySelector('.error') as HTMLElement
+  if (firstInvalidInput) {
+    firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    firstInvalidInput.focus()
+  }
+}
+
+// Expose these to parent
+defineExpose({
+  hasInvalidInputs,
+  scrollToFirstInvalidInput
+})
 </script>
 
 <template>
@@ -162,6 +182,7 @@ const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) 
                   type="text"
                   :value="module.value"
                   :placeholder="sourceType === 'GithubReleases' ? 'Version' : 'Full filename'"
+                  :class="{ 'error': !module.value.trim() }"
                   @input="(e) => handleInputChange(
                     module.id,
                     sourceType as ModuleType,
@@ -271,5 +292,15 @@ input {
 
 input::placeholder {
   color: #999;
+}
+
+input.error {
+  border-color: #d32f2f;
+  background-color: #fff5f5;
+}
+
+input.error:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
 }
 </style>

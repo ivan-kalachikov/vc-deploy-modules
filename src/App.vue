@@ -9,6 +9,7 @@ const config = ref<ConfigurationData | null>(null)
 const originalConfig = ref<ConfigurationData | null>(null)
 const jsonError = ref<string>('')
 const showDiff = ref(true)
+const moduleListRef = ref()
 
 const handleJsonSubmit = (jsonString: string) => {
   try {
@@ -237,13 +238,25 @@ const generateDiffDescription = () => {
             :config="config"
             @update="handlePlatformUpdate"
           />
-          <ModuleList :config="config" @module-update="handleModuleUpdate" />
+          <ModuleList
+            ref="moduleListRef"
+            :config="config"
+            @module-update="handleModuleUpdate"
+          />
         </div>
         <div class="json-column">
           <div class="json-output">
             <div class="json-header">
               <h2>Generated JSON</h2>
               <div class="json-actions">
+                <button
+                  v-if="moduleListRef?.hasInvalidInputs"
+                  class="action-button error-button"
+                  title="Some modules have invalid values"
+                  @click="moduleListRef.scrollToFirstInvalidInput()"
+                >
+                  ⚠️
+                </button>
                 <button
                   class="action-button"
                   :title="showDiff ? 'Hide Changes' : 'Show Changes'"
@@ -445,5 +458,14 @@ h1 {
 
 .copy-button:active {
   background: #004494;
+}
+
+.error-button {
+  color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+.error-button:hover {
+  background: #fff5f5;
 }
 </style>
