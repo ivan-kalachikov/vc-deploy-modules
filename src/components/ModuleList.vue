@@ -33,6 +33,11 @@ const getModuleId = (module: ModuleWithId) => {
   return id
 }
 
+// Helper function to format module ID for display
+const formatModuleId = (id: string) => {
+  return id.replace(/^VirtoCommerce\./, '')
+}
+
 // Computed sorted sources
 const sortedSources = computed(() => {
   return props.config.Sources.map(source => ({
@@ -138,7 +143,7 @@ const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) 
             class="module-item"
           >
             <div class="module-info">
-              <span class="module-id">{{ module.id }}</span>
+              <span class="module-id">{{ formatModuleId(module.id) }}</span>
             </div>
             <div class="module-controls">
               <select

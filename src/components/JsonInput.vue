@@ -58,7 +58,6 @@ const handleSubmit = () => {
 
 button {
   width: fit-content;
-  margin: 0 auto;
   padding: 10px 20px;
   background: #007bff;
   color: white;
@@ -76,6 +75,5 @@ h2 {
   margin-bottom: 30px;
   font-size: 22px;
   font-weight: 600;
-  text-align: center;
 }
 </style>
