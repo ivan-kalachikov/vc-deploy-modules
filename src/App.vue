@@ -9,15 +9,17 @@ const config = ref<ConfigurationData | null>(null)
 const originalConfig = ref<ConfigurationData | null>(null)
 const jsonError = ref<string>('')
 const showDiff = ref(true)
+const shouldSortModules = ref(true)
 const moduleListRef = ref()
 const platformConfigRef = ref()
 
-const handleJsonSubmit = (jsonString: string) => {
+const handleJsonSubmit = (jsonString: string, sort: boolean) => {
   try {
     const parsed = JSON.parse(jsonString)
     config.value = parsed
     originalConfig.value = JSON.parse(jsonString)
     jsonError.value = ''
+    shouldSortModules.value = sort
   } catch (e) {
     jsonError.value = 'Invalid JSON format'
   }
@@ -64,39 +66,40 @@ const generateJson = () => {
 
   const newConfig = JSON.parse(JSON.stringify(config.value))
 
-  // Helper function to get module ID for sorting
-  const getModuleId = (module: ModuleBase) => {
-    if (module.Id) return module.Id
-    return module.BlobName?.split('_')[0] || ''
+  if (shouldSortModules.value) {
+    // Helper function to get module ID for sorting
+    const getModuleId = (module: ModuleBase) => {
+      if (module.Id) return module.Id
+      return module.BlobName?.split('_')[0] || ''
+    }
+
+    // Sort Sources array and their modules
+    newConfig.Sources = newConfig.Sources
+      .sort((a, b) => a.Name.localeCompare(b.Name))
+      .map((source) => {
+        // First sort the modules array
+        const sortedModules = [...source.Modules].sort((a, b) =>
+          getModuleId(a).localeCompare(getModuleId(b))
+        )
+
+        return {
+          Name: source.Name,
+          ...(source.Name === 'AzureBlob'
+            ? {
+                Container: source.Container,
+                ServiceUri: source.ServiceUri,
+              }
+            : {
+                ModuleSources: [...source.ModuleSources].sort(),
+              }
+          ),
+          Modules: sortedModules
+        }
+      })
+
+    // Sort ModuleSources array
+    newConfig.ModuleSources = [...newConfig.ModuleSources].sort()
   }
-
-  // Sort Sources array and their modules
-  newConfig.Sources = newConfig.Sources
-    .sort((a, b) => a.Name.localeCompare(b.Name))
-    .map((source) => {
-      // First sort the modules array
-      const sortedModules = [...source.Modules].sort((a, b) =>
-        getModuleId(a).localeCompare(getModuleId(b))
-      )
-
-      return {
-        // Sort fields within each Source
-        Name: source.Name,
-        ...(source.Name === 'AzureBlob'
-          ? {
-              Container: source.Container,
-              ServiceUri: source.ServiceUri,
-            }
-          : {
-              ModuleSources: [...source.ModuleSources].sort(),
-            }
-        ),
-        Modules: sortedModules
-      }
-    })
-
-  // Sort ModuleSources array
-  newConfig.ModuleSources = [...newConfig.ModuleSources].sort()
 
   // Return sorted object with fixed field order
   return JSON.stringify({
@@ -255,6 +258,7 @@ const scrollToFirstInvalidInput = () => {
           <ModuleList
             ref="moduleListRef"
             :config="config"
+            :sort-enabled="shouldSortModules"
             @module-update="handleModuleUpdate"
           />
         </div>
@@ -430,6 +434,7 @@ h1 {
   color: #333;
   font-size: 14px;
   margin: 0 0 10px 0;
+  font-weight: bold;
 }
 
 .diff-text {

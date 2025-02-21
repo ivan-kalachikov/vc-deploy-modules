@@ -14,6 +14,7 @@ interface ModuleViewModel {
 
 const props = defineProps<{
   config: ConfigurationData
+  sortEnabled: boolean
 }>()
 
 const emit = defineEmits<{
@@ -37,21 +38,6 @@ const getModuleId = (module: ModuleWithId) => {
 const formatModuleId = (id: string) => {
   return id.replace(/^VirtoCommerce\./, '')
 }
-
-// Computed sorted sources
-const sortedSources = computed(() => {
-  return props.config.Sources.map(source => ({
-    ...source,
-    Modules: [...source.Modules].sort((a, b) =>
-      getModuleId(a as ModuleWithId).localeCompare(getModuleId(b as ModuleWithId))
-    )
-  }))
-})
-
-// Computed property to sort modules
-const sortedModules = computed(() => {
-  return [...modules.value].sort((a, b) => a.id.localeCompare(b.id))
-})
 
 // Convert config data to view models
 const updateModules = (config: ConfigurationData) => {
@@ -161,6 +147,14 @@ const scrollToFirstInvalidInput = () => {
     firstInvalidInput.focus()
   }
 }
+
+// Computed property for filtered and sorted modules
+const sortedModules = computed(() => {
+  if (!props.sortEnabled) {
+    return modules.value
+  }
+  return [...modules.value].sort((a, b) => a.id.localeCompare(b.id))
+})
 
 // Expose these to parent
 defineExpose({
