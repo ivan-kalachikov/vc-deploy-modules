@@ -18,6 +18,7 @@ const MODULE_REPO_MAPPING: Record<string, string> = {
   'VirtoCommerce.Notifications': 'vc-module-notification',
   'VirtoCommerce.OpenIdConnectModule': 'vc-module-openid-connect',
   'VirtoCommerce.Orders': 'vc-module-order',
+  'VirtoCommerce.PageBuilderModule': 'page-builder',
   'VirtoCommerce.ProfileExperienceApiModule': 'vc-module-profile-experience-api',
   'VirtoCommerce.ShipStation': 'vc-module-shipstation',
   'VirtoCommerce.WebHooks': 'vc-module-webhooks',
@@ -102,11 +103,21 @@ const isValidBlobName = (name: string): boolean => {
 // Update hasInvalidInputs to include blob format validation
 const hasInvalidInputs = computed(() => {
   return modules.value.some(module => {
-    if (!module.value.trim()) return true
-    if (module.value.trim()) {
+    const trimmedValue = module.value.trim()
+
+    // Empty value is always invalid
+    if (!trimmedValue) return true
+
+    // For GitHub releases with tags loaded, empty select is invalid
+    if (module.sourceType === 'GithubReleases' && module.tags?.length) {
+      return !trimmedValue || trimmedValue === '' || !isValidVersion(trimmedValue)
+    }
+
+    // For other cases, check format based on source type
+    if (trimmedValue) {
       return module.sourceType === 'GithubReleases'
-        ? !isValidVersion(module.value)
-        : !isValidBlobName(module.value)
+        ? !isValidVersion(trimmedValue)
+        : !isValidBlobName(trimmedValue)
     }
     return false
   })
@@ -462,13 +473,13 @@ defineExpose({
                       <select
                         :value="module.value"
                         :data-module-id="module.id.trim()"
-                        :class="{ 'error': !module.value.trim() || (module.value.trim() && !isValidVersion(module.value)) }"
+                        :class="{ 'error': !module.value || module.value === '' || !isValidVersion(module.value) }"
                         @change="(e: Event) => {
                           const target = e.target as HTMLSelectElement;
                           handleInputChange(module.id, sourceType as ModuleType, target.value);
                         }"
                       >
-                        <option value="">Select version</option>
+                        <option value="" disabled>Select version</option>
                         <option v-for="tag in module.tags" :key="tag" :value="tag">
                           {{ tag }}
                         </option>
@@ -659,6 +670,16 @@ input.error:focus {
   box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
 }
 
+select.error {
+  border-color: #d32f2f;
+  background-color: #fff5f5;
+}
+
+select.error:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+}
+
 .github-input-group {
   display: flex;
   gap: 8px;
@@ -721,5 +742,15 @@ input.error:focus {
   border-radius: 4px;
   font-size: 14px;
   min-width: 300px;
+}
+
+select.error {
+  border-color: #d32f2f;
+  background-color: #fff5f5;
+}
+
+select.error:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
 }
 </style>
