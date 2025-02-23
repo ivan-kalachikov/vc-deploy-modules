@@ -190,15 +190,32 @@ const fetchGitHubTags = async (moduleId: string) => {
     )
 
     console.log(`Fetching tags for: ${repoName}`)
-    const response = await fetch(
-      `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100`,
-      createGitHubRequestOptions()
-    )
-    if (!response.ok) {
-      throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
-    }
+    let allTags: Array<{ name: string }> = []
+    let currentPage = 1
+    let hasNextPage = true
 
-    let allTags = await response.json()
+    while (hasNextPage) {
+      const response = await fetch(
+        `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100&page=${currentPage}`,
+        createGitHubRequestOptions()
+      )
+      if (!response.ok) {
+        throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
+      }
+
+      const pageTags = await response.json()
+      if (pageTags.length === 0) {
+        hasNextPage = false
+      } else {
+        allTags = [...allTags, ...pageTags]
+        currentPage++
+      }
+
+      // Stop if we have enough tags or no more pages
+      if (pageTags.length < 100) {
+        hasNextPage = false
+      }
+    }
 
     module.tags = allTags
       .map((tag: { name: string }) => tag.name.replace(/^v/, ''))
