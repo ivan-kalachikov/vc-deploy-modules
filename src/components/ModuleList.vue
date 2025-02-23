@@ -129,25 +129,37 @@ const handleInputChange = (moduleId: string, type: ModuleType, value: string) =>
   emit('module-update', moduleId, type, fullValue)
 }
 
-const moveModule = (moduleId: string, fromType: ModuleType, toType: ModuleType) => {
-    // Find the index of the module in our view models:
-    const existingModuleIndex = modules.value.findIndex(m => m.id === moduleId && m.sourceType === fromType);
-    if (existingModuleIndex !== -1) {
-        // Remove from the old source, using splice to trigger reactivity:
-        modules.value.splice(existingModuleIndex, 1);
-    }
-    // Create a new module object for the target source with an empty value:
-    const newModule: ModuleViewModel = {
-        id: moduleId,
-        value: '',
-        sourceType: toType,
-    };
-    // Add the new module:
-    modules.value.push(newModule);
+const moveModule = async (moduleId: string, fromType: ModuleType, toType: ModuleType) => {
+  // Find the index of the module in our view models:
+  const existingModuleIndex = modules.value.findIndex(m => m.id === moduleId && m.sourceType === fromType);
+  if (existingModuleIndex !== -1) {
+    // Remove from the old source, using splice to trigger reactivity:
+    modules.value.splice(existingModuleIndex, 1);
+  }
+  // Create a new module object for the target source with an empty value:
+  const newModule: ModuleViewModel = {
+    id: moduleId,
+    value: '',
+    sourceType: toType,
+  };
 
-    // Emit updates to the parent:
-    emit('module-update', moduleId, fromType, '__DELETE__'); // Remove from old source
-    emit('module-update', moduleId, toType, '');               // Add to new source (will store BlobName as moduleId_ if empty)
+  // If moving to GitHub Releases, fetch tags immediately
+  if (toType === 'GithubReleases') {
+    // First check cache
+    const cached = getCachedTags(moduleId)
+    if (cached) {
+      newModule.tags = cached.tags
+    }
+    // Then fetch fresh tags
+    fetchGitHubTags(moduleId, true)
+  }
+
+  // Add the new module:
+  modules.value.push(newModule);
+
+  // Emit updates to the parent:
+  emit('module-update', moduleId, fromType, '__DELETE__'); // Remove from old source
+  emit('module-update', moduleId, toType, ''); // Add to new source
 };
 
 // Method to scroll to first invalid input
@@ -449,6 +461,7 @@ defineExpose({
                     <template v-if="module.tags">
                       <select
                         :value="module.value"
+                        :data-module-id="module.id.trim()"
                         :class="{ 'error': !module.value.trim() || (module.value.trim() && !isValidVersion(module.value)) }"
                         @change="(e: Event) => {
                           const target = e.target as HTMLSelectElement;
