@@ -1,11 +1,37 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
 import type { ConfigurationData, ModuleType } from '../types'
+import kebabCase from 'lodash-es/kebabCase'
+
+// Mapping for modules with non-standard repository names
+const MODULE_REPO_MAPPING: Record<string, string> = {
+  'VirtoCommerce.ApplicationInsights': 'vc-module-app-insights',
+  'VirtoCommerce.AuthorizeNetPayment': 'vc-module-authorize-net',
+  'VirtoCommerce.AvalaraTax': 'vc-module-avatax',
+  'VirtoCommerce.AzureBlobAssets': 'vc-module-azureblob-assets',
+  'VirtoCommerce.BulkActionsModule': 'vc-module-bulk-actions',
+  'VirtoCommerce.CatalogCsvImportModule': 'vc-module-catalog-csv-export-import',
+  'VirtoCommerce.Contracts': 'vc-module-contract',
+  'VirtoCommerce.CustomerReviews': 'vc-module-customer-review',
+  'VirtoCommerce.DynamicAssociationsModule': 'vc-module-dynamic-associations',
+  'VirtoCommerce.FileSystemAssets': 'vc-module-filesystem-assets',
+  'VirtoCommerce.Notifications': 'vc-module-notification',
+  'VirtoCommerce.OpenIdConnectModule': 'vc-module-openid-connect',
+  'VirtoCommerce.Orders': 'vc-module-order',
+  'VirtoCommerce.ProfileExperienceApiModule': 'vc-module-profile-experience-api',
+  'VirtoCommerce.ShipStation': 'vc-module-shipstation',
+  'VirtoCommerce.WebHooks': 'vc-module-webhooks',
+  'VirtoCommerce.XCMS': 'vc-module-x-cms',
+  // Add more mappings as needed, for example:
+  // 'VirtoCommerce.SomeModule': 'vc-module-different-name',
+}
 
 interface ModuleViewModel {
   id: string          // Module identifier (always the same as GitHub's Id)
   value: string       // Current input value
   sourceType: string  // 'GithubReleases' or 'AzureBlob'
+  tags?: string[]    // Add tags array for GitHub releases
+  isLoadingTags?: boolean
 }
 
 const props = defineProps<{
@@ -141,6 +167,59 @@ const sortedModules = computed(() => {
   return [...modules.value].sort((a, b) => a.id.localeCompare(b.id))
 })
 
+// GitHub token will be provided via environment variable
+const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN
+
+// Helper function to create fetch options with auth
+const createGitHubRequestOptions = (): RequestInit => ({
+  headers: GITHUB_TOKEN ? {
+    'Authorization': `token ${GITHUB_TOKEN}`,
+    'Accept': 'application/vnd.github.v3+json'
+  } : {}
+})
+
+// Function to fetch GitHub tags
+const fetchGitHubTags = async (moduleId: string) => {
+  try {
+    const module = modules.value.find(m => m.id === moduleId)
+    if (!module) return
+
+    module.isLoadingTags = true
+    const repoName = MODULE_REPO_MAPPING[moduleId] || (
+      'vc-module-' + kebabCase(moduleId.replace(/^VirtoCommerce\./, ''))
+    )
+
+    console.log(`Fetching tags for: ${repoName}`)
+    const response = await fetch(
+      `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100`,
+      createGitHubRequestOptions()
+    )
+    if (!response.ok) {
+      throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
+    }
+
+    let allTags = await response.json()
+
+    module.tags = allTags
+      .map((tag: { name: string }) => tag.name.replace(/^v/, ''))
+      .filter((tag: string) => isValidVersion(tag))
+      .sort((a: string, b: string) => b.localeCompare(a)) // Sort descending
+
+  } catch (error) {
+    console.error(`Error fetching tags for ${moduleId}:`, error)
+    // Clear tags if there was an error
+    const module = modules.value.find(m => m.id === moduleId)
+    if (module) {
+      module.tags = undefined
+    }
+  } finally {
+    const module = modules.value.find(m => m.id === moduleId)
+    if (module) {
+      module.isLoadingTags = false
+    }
+  }
+}
+
 // Expose these to parent
 defineExpose({
   hasInvalidInputs,
@@ -178,21 +257,66 @@ defineExpose({
                 <option value="AzureBlob">Azure Blob</option>
               </select>
               <div class="input-container">
+                <template v-if="sourceType === 'GithubReleases'">
+                  <div class="github-input-group">
+                    <template v-if="module.tags">
+                      <select
+                        :value="module.value"
+                        :class="{ 'error': !module.value.trim() || (module.value.trim() && !isValidVersion(module.value)) }"
+                        @change="(e: Event) => {
+                          const target = e.target as HTMLSelectElement;
+                          handleInputChange(module.id, sourceType as ModuleType, target.value);
+                        }"
+                      >
+                        <option value="">Select version</option>
+                        <option v-for="tag in module.tags" :key="tag" :value="tag">
+                          {{ tag }}
+                        </option>
+                      </select>
+                    </template>
+                    <template v-else>
+                      <input
+                        :data-module-id="module.id.trim()"
+                        type="text"
+                        :value="module.value"
+                        :placeholder="'Version'"
+                        :class="{
+                          'error': !module.value.trim() || (module.value.trim() && !isValidVersion(module.value))
+                        }"
+                        :title="'Format should be: major.minor.patch (e.g., 3.809.0)'"
+                        @input="(e: Event) => {
+                          const target = e.target as HTMLInputElement;
+                          handleInputChange(module.id, sourceType as ModuleType, target.value);
+                        }"
+                        @blur="(e: Event) => {
+                          const target = e.target as HTMLInputElement;
+                          target.value = target.value.trim();
+                        }"
+                      />
+                    </template>
+                    <button
+                      class="load-tags-button"
+                      @click="fetchGitHubTags(module.id)"
+                      :disabled="module.isLoadingTags"
+                      :title="module.tags ? 'Reload tags' : 'Load available versions'"
+                    >
+                      {{ module.isLoadingTags ? '⌛' : '↻' }}
+                    </button>
+                  </div>
+                </template>
                 <input
+                  v-else
                   :data-module-id="module.id.trim()"
                   type="text"
                   :value="module.value"
-                  :placeholder="sourceType === 'GithubReleases' ? 'Version' : 'Version with suffix (e.g., 3.806.0-pr-62-df9c.zip)'"
+                  placeholder="Version with suffix (e.g., 3.806.0-pr-62-df9c.zip)"
                   :class="{
                     'error': !module.value.trim() ||
                             (module.value.trim() && (
-                              (sourceType === 'GithubReleases' && !isValidVersion(module.value)) ||
                               (sourceType === 'AzureBlob' && !isValidBlobName(module.value))
                             ))
                   }"
-                  :title="sourceType === 'GithubReleases'
-                    ? 'Format should be: major.minor.patch (e.g., 3.809.0)'
-                    : 'Format should be: version[-suffix].zip (e.g., 3.806.0-pr-62-df9c.zip)'"
+                  title="Format should be: version[-suffix].zip (e.g., 3.806.0-pr-62-df9c.zip)"
                   @input="(e: Event) => {
                     const target = e.target as HTMLInputElement;
                     handleInputChange(module.id, sourceType as ModuleType, target.value);
@@ -324,5 +448,41 @@ input.error {
 input.error:focus {
   border-color: #d32f2f;
   box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+}
+
+.github-input-group {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.github-input-group input,
+.github-input-group select {
+  flex: 1;
+}
+
+.load-tags-button {
+  padding: 8px;
+  background: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  min-width: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.load-tags-button:hover:not(:disabled) {
+  background: #e0e0e0;
+  transform: scale(1.05);
+}
+
+.load-tags-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
