@@ -170,21 +170,62 @@ const sortedModules = computed(() => {
 // GitHub token will be provided via environment variable
 const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN
 
-// Helper function to create fetch options with auth
-const createGitHubRequestOptions = (): RequestInit => ({
-  headers: GITHUB_TOKEN ? {
-    'Authorization': `token ${GITHUB_TOKEN}`,
-    'Accept': 'application/vnd.github.v3+json'
-  } : {}
-})
+// Local storage key prefix for cached tags
+const TAGS_CACHE_PREFIX = 'vc-module-tags-'
+const TAGS_CACHE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+
+interface CachedTags {
+  tags: string[];
+  timestamp: number;
+}
+
+// Helper function to get cached tags
+const getCachedTags = (moduleId: string): CachedTags | null => {
+  try {
+    const cached = localStorage.getItem(TAGS_CACHE_PREFIX + moduleId)
+    if (!cached) return null
+
+    const data = JSON.parse(cached) as CachedTags
+    // Check if cache is expired (older than 24 hours)
+    if (Date.now() - data.timestamp > TAGS_CACHE_EXPIRY) {
+      localStorage.removeItem(TAGS_CACHE_PREFIX + moduleId)
+      return null
+    }
+    return data
+  } catch {
+    return null
+  }
+}
+
+// Helper function to set cached tags
+const setCachedTags = (moduleId: string, tags: string[]) => {
+  try {
+    const data: CachedTags = {
+      tags,
+      timestamp: Date.now()
+    }
+    localStorage.setItem(TAGS_CACHE_PREFIX + moduleId, JSON.stringify(data))
+  } catch (error) {
+    console.error('Error caching tags:', error)
+  }
+}
 
 // Function to fetch GitHub tags
-const fetchGitHubTags = async (moduleId: string) => {
+const fetchGitHubTags = async (moduleId: string, forceRefresh = false) => {
   try {
     const module = modules.value.find(m => m.id === moduleId)
     if (!module) return
 
     module.isLoadingTags = true
+
+    // Check cache first if not forcing refresh
+    const cached = getCachedTags(moduleId)
+    if (cached && !forceRefresh) {
+      module.tags = cached.tags
+      module.isLoadingTags = false
+      return
+    }
+
     const repoName = MODULE_REPO_MAPPING[moduleId] || (
       'vc-module-' + kebabCase(moduleId.replace(/^VirtoCommerce\./, ''))
     )
@@ -197,7 +238,12 @@ const fetchGitHubTags = async (moduleId: string) => {
     while (hasNextPage) {
       const response = await fetch(
         `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100&page=${currentPage}`,
-        createGitHubRequestOptions()
+        {
+          headers: GITHUB_TOKEN ? {
+            'Authorization': `token ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json'
+          } : {}
+        }
       )
       if (!response.ok) {
         throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
@@ -211,20 +257,22 @@ const fetchGitHubTags = async (moduleId: string) => {
         currentPage++
       }
 
-      // Stop if we have enough tags or no more pages
       if (pageTags.length < 100) {
         hasNextPage = false
       }
     }
 
-    module.tags = allTags
+    const processedTags = allTags
       .map((tag: { name: string }) => tag.name.replace(/^v/, ''))
       .filter((tag: string) => isValidVersion(tag))
-      .sort((a: string, b: string) => b.localeCompare(a)) // Sort descending
+      .sort((a: string, b: string) => b.localeCompare(a))
+
+    // Cache the processed tags
+    setCachedTags(moduleId, processedTags)
+    module.tags = processedTags
 
   } catch (error) {
     console.error(`Error fetching tags for ${moduleId}:`, error)
-    // Clear tags if there was an error
     const module = modules.value.find(m => m.id === moduleId)
     if (module) {
       module.tags = undefined
@@ -236,6 +284,18 @@ const fetchGitHubTags = async (moduleId: string) => {
     }
   }
 }
+
+// Load cached tags on component mount
+watch(() => modules.value, (newModules) => {
+  newModules.forEach(module => {
+    if (module.sourceType === 'GithubReleases') {
+      const cached = getCachedTags(module.id)
+      if (cached) {
+        module.tags = cached.tags
+      }
+    }
+  })
+}, { immediate: true })
 
 // Expose these to parent
 defineExpose({
@@ -313,7 +373,7 @@ defineExpose({
                     </template>
                     <button
                       class="load-tags-button"
-                      @click="fetchGitHubTags(module.id)"
+                      @click="fetchGitHubTags(module.id, true)"
                       :disabled="module.isLoadingTags"
                       :title="module.tags ? 'Reload tags' : 'Load available versions'"
                     >
