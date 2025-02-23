@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import type { ConfigurationData, ModuleType } from '../types'
 import kebabCase from 'lodash-es/kebabCase'
 
@@ -297,6 +297,106 @@ watch(() => modules.value, (newModules) => {
   })
 }, { immediate: true })
 
+// Helper function to extract PR URL from blob name
+const extractPrUrl = (blobName: string): string | null => {
+  const prMatch = blobName.match(/-pr-(\d+)-/)
+  if (prMatch) {
+    return `https://github.com/VirtoCommerce/vc-platform/pull/${prMatch[1]}`
+  }
+  return null
+}
+
+// Helper function to parse artifact URL from PR description
+const parseArtifactUrl = (description: string): { moduleId: string, fileName: string } | null => {
+  // Replace all types of line breaks with spaces to handle \r\n
+  const normalizedDesc = description.replace(/[\r\n]+/g, ' ')
+  const match = normalizedDesc.match(/Artifact URL:\s*https:\/\/vc3prerelease\.blob\.core\.windows\.net\/packages\/([^/\s]+_([\d.]+(?:-[\w.-]+)?\.zip))/i)
+  if (match) {
+    const [_, fullFileName, version] = match
+    const moduleId = fullFileName.split('_')[0]
+    console.log('Found artifact info:', { moduleId, fullFileName })
+    return {
+      moduleId,
+      fileName: fullFileName
+    }
+  }
+  console.log('No artifact URL found in description:', normalizedDesc)
+  return null
+}
+
+const showPrInput = ref(false)
+const prUrl = ref('')
+
+const handlePrUrlSubmit = async () => {
+  try {
+    // Extract PR number from URL
+    const prMatch = prUrl.value.match(/github\.com\/VirtoCommerce\/([^/]+)\/pull\/(\d+)/)
+    if (!prMatch) {
+      throw new Error('Invalid PR URL')
+    }
+
+    const [_, repo, prNumber] = prMatch
+    const response = await fetch(
+      `https://api.github.com/repos/VirtoCommerce/${repo}/pulls/${prNumber}`,
+      {
+        headers: GITHUB_TOKEN ? {
+          'Authorization': `token ${GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github.v3+json'
+        } : {}
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch PR description')
+    }
+
+    const prData = await response.json()
+    const artifactInfo = parseArtifactUrl(prData.body || '')
+
+    if (artifactInfo) {
+      // Find the module in either source
+      const existingModule = modules.value.find(m => m.id === artifactInfo.moduleId)
+
+      if (existingModule) {
+        const fileName = artifactInfo.fileName.split('_')[1]
+        console.log(`Found artifact: ${artifactInfo.moduleId} with file ${fileName}`)
+
+        // If module exists in GitHub Releases, move it to Azure Blob
+        if (existingModule.sourceType === 'GithubReleases') {
+          console.log(`Moving ${artifactInfo.moduleId} from GitHub Releases to Azure Blob`)
+          moveModule(artifactInfo.moduleId, 'GithubReleases', 'AzureBlob')
+          // Wait for the next tick to ensure module is moved
+          await nextTick()
+        }
+
+        // Update the blob name after ensuring it's in Azure Blob
+        console.log(`Updating ${artifactInfo.moduleId} with version ${fileName}`)
+        // Find the module again after potential move
+        const updatedModule = modules.value.find(m => m.id === artifactInfo.moduleId)
+        if (updatedModule) {
+          handleInputChange(artifactInfo.moduleId, 'AzureBlob', fileName)
+          updatedModule.value = fileName
+        } else {
+          throw new Error(`Module ${artifactInfo.moduleId} not found after move`)
+        }
+      } else {
+        console.error(`Module ${artifactInfo.moduleId} not found in the configuration`)
+        alert(`Module ${artifactInfo.moduleId} not found in the configuration`)
+      }
+    } else {
+      throw new Error('No artifact URL found in PR description')
+    }
+
+    // Clear and hide input
+    prUrl.value = ''
+    showPrInput.value = false
+
+  } catch (error) {
+    console.error('Error processing PR URL:', error)
+    alert(error instanceof Error ? error.message : 'Failed to process PR. Please check the console for details.')
+  }
+}
+
 // Expose these to parent
 defineExpose({
   hasInvalidInputs,
@@ -312,7 +412,28 @@ defineExpose({
       class="source-section"
     >
       <div class="section-container">
-        <h2>{{ sourceType === 'AzureBlob' ? 'Azure Blob Storage' : 'GitHub Releases' }}</h2>
+        <div class="section-header">
+          <h2>{{ sourceType === 'AzureBlob' ? 'Azure Blob Storage' : 'GitHub Releases' }}</h2>
+          <template v-if="sourceType === 'AzureBlob'">
+            <button
+              v-if="!showPrInput"
+              class="pr-button"
+              @click="showPrInput = true"
+              title="Parse module from PR"
+            >
+              Parse PR
+            </button>
+            <div v-else class="pr-input-group">
+              <input
+                v-model="prUrl"
+                placeholder="Enter PR URL"
+                @keyup.enter="handlePrUrlSubmit"
+              />
+              <button class="pr-button" @click="handlePrUrlSubmit">Parse</button>
+              <button class="pr-button" @click="showPrInput = false">Cancel</button>
+            </div>
+          </template>
+        </div>
         <div class="modules">
           <div
             v-for="module in sortedModules.filter(m => m.sourceType === sourceType)"
@@ -387,13 +508,15 @@ defineExpose({
                   type="text"
                   :value="module.value"
                   placeholder="Version with suffix (e.g., 3.806.0-pr-62-df9c.zip)"
+                  :title="module.value && extractPrUrl(module.value)
+                    ? `PR: ${extractPrUrl(module.value)}`
+                    : 'Format should be: version[-suffix].zip (e.g., 3.806.0-pr-62-df9c.zip)'"
                   :class="{
                     'error': !module.value.trim() ||
                             (module.value.trim() && (
                               (sourceType === 'AzureBlob' && !isValidBlobName(module.value))
                             ))
                   }"
-                  title="Format should be: version[-suffix].zip (e.g., 3.806.0-pr-62-df9c.zip)"
                   @input="(e: Event) => {
                     const target = e.target as HTMLInputElement;
                     handleInputChange(module.id, sourceType as ModuleType, target.value);
@@ -433,6 +556,13 @@ defineExpose({
   color: #333;
   margin-bottom: 20px;
   font-weight: 600;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
 .modules {
@@ -561,5 +691,33 @@ input.error:focus {
 .load-tags-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.pr-button {
+  padding: 8px 12px;
+  background: #4a6ee0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.pr-button:hover {
+  background: #3d5bc4;
+}
+
+.pr-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pr-input-group input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  min-width: 300px;
 }
 </style>
