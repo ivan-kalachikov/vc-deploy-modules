@@ -324,7 +324,6 @@ const parseArtifactUrl = (description: string): { moduleId: string, fileName: st
   return null
 }
 
-const showPrInput = ref(false)
 const prUrl = ref('')
 
 const handlePrUrlSubmit = async () => {
@@ -389,7 +388,6 @@ const handlePrUrlSubmit = async () => {
 
     // Clear and hide input
     prUrl.value = ''
-    showPrInput.value = false
 
   } catch (error) {
     console.error('Error processing PR URL:', error)
@@ -415,22 +413,13 @@ defineExpose({
         <div class="section-header">
           <h2>{{ sourceType === 'AzureBlob' ? 'Azure Blob Storage' : 'GitHub Releases' }}</h2>
           <template v-if="sourceType === 'AzureBlob'">
-            <button
-              v-if="!showPrInput"
-              class="pr-button"
-              @click="showPrInput = true"
-              title="Parse module from PR"
-            >
-              Parse PR
-            </button>
-            <div v-else class="pr-input-group">
+            <div class="pr-input-group">
               <input
                 v-model="prUrl"
                 placeholder="Enter PR URL"
                 @keyup.enter="handlePrUrlSubmit"
               />
               <button class="pr-button" @click="handlePrUrlSubmit">Parse</button>
-              <button class="pr-button" @click="showPrInput = false">Cancel</button>
             </div>
           </template>
         </div>
