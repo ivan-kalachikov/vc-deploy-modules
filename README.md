@@ -7,6 +7,8 @@ A web-based tool for managing VirtoCommerce deployment configurations. Provides 
 - Edit platform settings and module versions
 - Switch between Azure Blob and GitHub Release sources
 - Version validation and change tracking
+- Parse a PR by link to get an artifact URL
+- Fetch release tags
 - Real-time JSON preview with diff display
 - Optional module sorting
 - Copy to clipboard functionality
