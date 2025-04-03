@@ -23,6 +23,7 @@ const MODULE_REPO_MAPPING: Record<string, string> = {
   'VirtoCommerce.ShipStation': 'vc-module-shipstation',
   'VirtoCommerce.WebHooks': 'vc-module-webhooks',
   'VirtoCommerce.XCMS': 'vc-module-x-cms',
+  'VirtoCommerce.Xapi': 'vc-module-x-api',
   // Add more mappings as needed, for example:
   // 'VirtoCommerce.SomeModule': 'vc-module-different-name',
 }
