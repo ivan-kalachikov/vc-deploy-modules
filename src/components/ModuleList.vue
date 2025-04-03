@@ -24,7 +24,7 @@ const MODULE_REPO_MAPPING: Record<string, string> = {
   'VirtoCommerce.WebHooks': 'vc-module-webhooks',
   'VirtoCommerce.XCMS': 'vc-module-x-cms',
   'VirtoCommerce.Xapi': 'vc-module-x-api',
-  'VirtoCommerce.CyberSourcePaymen': 'vc-module-cyber-source',
+  'VirtoCommerce.CyberSourcePayment': 'vc-module-cyber-source',
   // Add more mappings as needed, for example:
   // 'VirtoCommerce.SomeModule': 'vc-module-different-name',
 }
