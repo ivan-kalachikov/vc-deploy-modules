@@ -523,7 +523,7 @@ defineExpose({
                 @click="updateAllGitHubModules"
                 :disabled="isUpdatingAllModules"
               >
-                {{ isUpdatingAllModules ? `Updating...` : 'Update All' }}
+                {{ isUpdatingAllModules ? `Updating...` : 'Update All To Latest Versions' }}
               </button>
               <div v-if="isUpdatingAllModules" class="progress-container">
                 <div class="progress-bar" :style="{ width: `${(updateProgress.current / updateProgress.total) * 100}%` }"></div>
