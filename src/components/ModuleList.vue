@@ -46,6 +46,8 @@ const emit = defineEmits<{
 }>()
 
 const modules = ref<ModuleViewModel[]>([])
+const isUpdatingAllModules = ref(false)
+const updateProgress = ref({ current: 0, total: 0 })
 
 // Helper function to format module ID for display
 const formatModuleId = (id: string) => {
@@ -309,6 +311,74 @@ const fetchGitHubTags = async (moduleId: string, forceRefresh = false) => {
   }
 }
 
+// Function to update all GitHub modules at once
+const updateAllGitHubModules = async () => {
+  try {
+    // Get all GitHub modules
+    const githubModules = modules.value.filter(m => m.sourceType === 'GithubReleases')
+
+    if (githubModules.length === 0) {
+      alert('No GitHub modules found to update')
+      return
+    }
+
+    isUpdatingAllModules.value = true
+    updateProgress.value = { current: 0, total: githubModules.length }
+
+    let updatedCount = 0
+    console.log(`Starting update for ${githubModules.length} GitHub modules`)
+
+    // Process modules sequentially to avoid rate limiting
+    for (const module of githubModules) {
+      try {
+        console.log(`Processing module: ${module.id}`)
+
+        // Add a small delay between API calls to avoid rate limiting
+        if (updateProgress.value.current > 0) {
+          await new Promise(resolve => setTimeout(resolve, 500))
+        }
+
+        // Fetch tags for this module
+        console.log(`Fetching tags for: ${module.id}`)
+        await fetchGitHubTags(module.id, true)
+
+        // Get the latest version if tags were successfully loaded
+        if (module.tags?.length) {
+          const latestVersion = module.tags[0]
+          const currentVersion = module.value
+
+          console.log(`Module ${module.id}: current=${currentVersion}, latest=${latestVersion}`)
+
+          // Always update to latest version
+          handleInputChange(module.id, 'GithubReleases', latestVersion)
+          console.log(`Updated ${module.id} to ${latestVersion}`)
+          updatedCount++
+        } else {
+          console.log(`No tags found for module: ${module.id}`)
+        }
+      } catch (error) {
+        console.error(`Error updating module ${module.id}:`, error)
+      } finally {
+        // Update progress
+        updateProgress.value.current++
+        console.log('--------------------------------');
+      }
+    }
+
+    // Show completion message
+    if (updatedCount > 0) {
+      alert(`Successfully updated ${updatedCount} module${updatedCount > 1 ? 's' : ''} to latest versions.`)
+    } else {
+      alert('No modules were updated. This could be due to API rate limits or no available versions.')
+    }
+  } catch (error) {
+    console.error('Error updating all modules:', error)
+    alert('An error occurred while updating modules. Check console for details.')
+  } finally {
+    isUpdatingAllModules.value = false
+  }
+}
+
 // Load cached tags on component mount
 watch(() => modules.value, (newModules) => {
   newModules.forEach(module => {
@@ -444,6 +514,21 @@ defineExpose({
                 @keyup.enter="handlePrUrlSubmit"
               />
               <button class="pr-button" @click="handlePrUrlSubmit">Parse</button>
+            </div>
+          </template>
+          <template v-else-if="sourceType === 'GithubReleases'">
+            <div class="update-all-group">
+              <button
+                class="update-all-button"
+                @click="updateAllGitHubModules"
+                :disabled="isUpdatingAllModules"
+              >
+                {{ isUpdatingAllModules ? `Updating...` : 'Update All' }}
+              </button>
+              <div v-if="isUpdatingAllModules" class="progress-container">
+                <div class="progress-bar" :style="{ width: `${(updateProgress.current / updateProgress.total) * 100}%` }"></div>
+                <span class="progress-text">{{ updateProgress.current }}/{{ updateProgress.total }}</span>
+              </div>
             </div>
           </template>
         </div>
@@ -753,5 +838,58 @@ select.error {
 select.error:focus {
   border-color: #d32f2f;
   box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+}
+
+.update-all-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.update-all-button {
+  padding: 8px 12px;
+  background: #4a6ee0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.update-all-button:hover:not(:disabled) {
+  background: #3d5bc4;
+}
+
+.update-all-button:disabled {
+  background: #a0acd7;
+  cursor: not-allowed;
+}
+
+.progress-container {
+  position: relative;
+  height: 24px;
+  background: #f0f0f0;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 150px;
+  border: 1px solid #ccc;
+}
+
+.progress-bar {
+  height: 100%;
+  background: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  color: #333;
+  font-weight: 600;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
 }
 </style>
