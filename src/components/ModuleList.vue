@@ -490,6 +490,14 @@ const handlePrUrlSubmit = async () => {
   }
 }
 
+// Function to get GitHub repo URL for a module
+const getGitHubRepoUrl = (moduleId: string): string => {
+  const repoName = MODULE_REPO_MAPPING[moduleId] || (
+    'vc-module-' + kebabCase(moduleId.replace(/^VirtoCommerce\./, ''))
+  )
+  return `https://github.com/VirtoCommerce/${repoName}`
+}
+
 // Expose these to parent
 defineExpose({
   hasInvalidInputs,
@@ -540,7 +548,15 @@ defineExpose({
             class="module-item"
           >
             <div class="module-info">
-              <span class="module-id" :title="formatModuleId(module.id)">{{ formatModuleId(module.id) }}</span>
+              <a
+                :href="getGitHubRepoUrl(module.id)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="module-id"
+                :title="formatModuleId(module.id)"
+              >
+                {{ formatModuleId(module.id) }}
+              </a>
             </div>
             <div class="module-controls">
               <select
@@ -671,6 +687,24 @@ defineExpose({
   gap: 12px;
 }
 
+.modules::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modules::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modules::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.modules::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
 .module-item {
   display: flex;
   gap: 12px;
@@ -691,12 +725,18 @@ defineExpose({
 .module-id {
   font-family: monospace;
   font-size: 14px;
-  color: #000;
+  color: #0366d6;
   font-weight: 500;
   display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+.module-id:hover {
+  text-decoration: underline;
+  color: #0550ae;
 }
 
 .module-controls {
