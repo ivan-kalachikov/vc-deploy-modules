@@ -98,7 +98,12 @@ const handleBack = () => {
 // Easter egg: click logo 7 times
 const logoClicks = ref(0)
 const logoParty = ref(false)
+let clickResetTimer: ReturnType<typeof setTimeout>
 watch(logoClicks, (n) => {
+  clearTimeout(clickResetTimer)
+  if (n > 0 && n < 7) {
+    clickResetTimer = setTimeout(() => { logoClicks.value = 0 }, 3000)
+  }
   if (n >= 7) {
     logoParty.value = true
     addToast('🎉 Party mode activated!', 'success')
@@ -231,7 +236,12 @@ const handleCopy = async () => {
     <header class="app-header">
       <div class="header-left">
         <button v-if="config" class="back-button" @click="handleBack">Back</button>
-        <img src="./assets/logo.png" alt="" class="app-logo" :class="{ party: logoParty }" @click="logoClicks++" />
+        <img
+          src="./assets/logo.png" alt="" class="app-logo"
+          :class="{ party: logoParty, clicking: logoClicks > 0 && !logoParty }"
+          :style="logoClicks > 0 && !logoParty ? `transform: scale(${1 + logoClicks * 0.08}) rotate(${logoClicks * 3}deg)` : ''"
+          @click="logoClicks++"
+        />
         <h1>Module Configuration Manager</h1>
       </div>
       <div class="header-right">
@@ -339,7 +349,21 @@ const handleCopy = async () => {
   width: 36px;
   height: 36px;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+  animation: logo-nudge 8s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+@keyframes logo-nudge {
+  0%, 90%, 100% { transform: rotate(0deg); }
+  92% { transform: rotate(-8deg) scale(1.05); }
+  94% { transform: rotate(8deg) scale(1.1); }
+  96% { transform: rotate(-5deg) scale(1.05); }
+  98% { transform: rotate(3deg); }
+}
+
+.app-logo.clicking {
+  animation: none;
 }
 
 .app-logo:active {
