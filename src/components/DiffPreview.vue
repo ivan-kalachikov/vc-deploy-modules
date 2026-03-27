@@ -101,6 +101,7 @@ const emit = defineEmits<{
 .module-id-button {
   background: none;
   border: none;
+  text-align: left;
   color: var(--primary);
   cursor: pointer;
   font-family: monospace;
