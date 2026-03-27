@@ -39,7 +39,7 @@ export function useModuleTags() {
   async function updateAllToLatest(
     modules: ModuleViewModel[],
     onModuleUpdated: (moduleId: string, latestVersion: string) => void,
-    batchSize = 5,
+    batchSize = 10,
   ): Promise<number> {
     const githubModules = modules.filter(
       (m) => m.sourceType === 'GithubReleases',
