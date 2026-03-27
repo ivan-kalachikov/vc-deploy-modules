@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, computed, nextTick } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { ConfigurationData, ModuleType, ModuleViewModel } from '../types'
 import { isValidVersion, isValidBlobName } from '../utils/validation'
 import { useModuleTags } from '../composables/useModuleTags'
 import { useToast } from '../composables/useToast'
-import type { ArtifactInfo } from '../services/github'
 import ModuleSourceSection from './ModuleSourceSection.vue'
-import PrUrlInput from './PrUrlInput.vue'
 import BulkUpdateButton from './BulkUpdateButton.vue'
 
 const props = defineProps<{
@@ -97,28 +95,6 @@ const moveModule = async (moduleId: string, fromType: ModuleType, toType: Module
   emit('module-update', moduleId, toType, '')
 }
 
-// Handle PR artifact parsed
-const handleArtifactParsed = async (artifact: ArtifactInfo) => {
-  const existing = modules.value.find(m => m.id === artifact.moduleId)
-  if (!existing) {
-    addToast(`Module ${artifact.moduleId} not found in the configuration`, 'error')
-    return
-  }
-
-  const fileName = artifact.fileName.split('_')[1]
-
-  if (existing.sourceType === 'GithubReleases') {
-    await moveModule(artifact.moduleId, 'GithubReleases', 'AzureBlob')
-    await nextTick()
-  }
-
-  const updated = modules.value.find(m => m.id === artifact.moduleId)
-  if (updated) {
-    handleInputChange(artifact.moduleId, 'AzureBlob', fileName)
-    updated.value = fileName
-  }
-}
-
 // Update all GitHub modules to latest
 const handleUpdateAll = async () => {
   const count = await updateAllToLatest(modules.value, (moduleId, latestVersion) => {
@@ -171,11 +147,8 @@ defineExpose({ hasInvalidInputs, scrollToFirstInvalidInput })
       @module-update="handleInputChange"
       @module-move="moveModule"
       @load-tags="handleLoadTags"
-    >
-      <template #header-actions>
-        <PrUrlInput @artifact-parsed="handleArtifactParsed" />
-      </template>
-    </ModuleSourceSection>
+    />
+
 
     <ModuleSourceSection
       source-type="GithubReleases"

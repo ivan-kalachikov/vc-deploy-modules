@@ -61,6 +61,7 @@ const emit = defineEmits<{
   border-radius: var(--radius-sm);
   padding: 15px;
   margin-bottom: 15px;
+  overflow: hidden;
 }
 
 .diff-preview h3 {
@@ -82,6 +83,8 @@ const emit = defineEmits<{
   color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.5;
+  overflow-wrap: break-word;
+  word-break: break-all;
 }
 
 .diff-preview li:last-child {
