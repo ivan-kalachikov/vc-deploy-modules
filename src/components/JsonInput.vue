@@ -51,37 +51,39 @@ const handleTextareaInput = (e: Event) => {
   width: 100%;
   margin-bottom: 10px;
   padding: 20px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-secondary);
   font-family: monospace;
   font-size: 14px;
   line-height: 1.5;
   min-height: 500px;
   box-sizing: border-box;
   text-align: left;
+  background: var(--surface-card);
+  color: var(--text-primary);
 }
 
 .error {
-  color: red;
+  color: var(--error-text);
   margin-bottom: 10px;
 }
 
 button {
   width: fit-content;
   padding: 10px 20px;
-  background: #007bff;
-  color: white;
+  background: var(--primary);
+  color: var(--text-on-primary);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
 }
 
 button:hover {
-  background: #0056b3;
+  background: var(--primary-hover);
 }
 
 h2 {
-  color: white;
+  color: var(--text-inverse);
   margin-bottom: 30px;
   font-size: 22px;
   font-weight: 600;
@@ -98,7 +100,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: white;
+  color: var(--text-inverse);
   cursor: pointer;
   user-select: none;
 }

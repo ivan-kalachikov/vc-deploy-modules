@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { ConfigurationData } from '../types'
+import { isValidVersion, isValidManifestVersion, isValidPlatformImage } from '../utils/validation'
 
 const isExpanded = ref(false)
 const props = defineProps<{
@@ -10,24 +11,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update': [newConfig: ConfigurationData]
 }>()
-
-// Helper function to validate version format (major.minor.patch)
-const isValidVersion = (version: string): boolean => {
-  const versionRegex = /^\d+\.\d+\.\d+$/
-  return versionRegex.test(version.trim())
-}
-
-// Helper function to validate manifest version format (major.minor)
-const isValidManifestVersion = (version: string): boolean => {
-  const versionRegex = /^\d+\.\d+$/
-  return versionRegex.test(version.trim())
-}
-
-// Helper function to validate platform image format (ghcr.io/virtocommerce/platform)
-const isValidPlatformImage = (image: string): boolean => {
-  const imageRegex = /^[\w.-]+\.\w+\/[\w.-]+(\/[\w.-]+)?$/
-  return imageRegex.test(image.trim())
-}
 
 // Computed property to check for invalid fields
 const hasInvalidInputs = computed(() => {
@@ -168,8 +151,8 @@ const updateField = <T extends keyof ConfigurationData>(field: T, value: Configu
 .platform-config {
   margin-bottom: 20px;
   padding: 20px;
-  background: #f8f8f8;
-  border-radius: 8px;
+  background: var(--surface-secondary);
+  border-radius: var(--radius-md);
   width: 100%;
   box-sizing: border-box;
 }
@@ -189,11 +172,11 @@ const updateField = <T extends keyof ConfigurationData>(field: T, value: Configu
 
 .toggle-icon {
   font-size: 14px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .platform-config h2 {
-  color: #333;
+  color: var(--text-primary);
   margin: 0;
   font-weight: 600;
 }
@@ -209,10 +192,10 @@ const updateField = <T extends keyof ConfigurationData>(field: T, value: Configu
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: white;
+  background: var(--surface-card);
   padding: 10px;
-  border-radius: 4px;
-  border: 1px solid #ddd;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-primary);
   min-width: 0;
   overflow: hidden;
   max-width: 100%;
@@ -225,16 +208,17 @@ const updateField = <T extends keyof ConfigurationData>(field: T, value: Configu
 
 label {
   font-weight: 500;
-  color: #333;
+  color: var(--text-primary);
 }
 
 input, textarea {
   padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-sm);
   font-size: 14px;
   font-family: monospace;
-  background: white;
+  background: var(--surface-card);
+  color: var(--text-primary);
   width: 100%;
   box-sizing: border-box;
   min-width: 0;
@@ -243,8 +227,8 @@ input, textarea {
 
 input:focus, textarea:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--border-focus-shadow);
 }
 
 textarea {
@@ -252,12 +236,12 @@ textarea {
 }
 
 input.error {
-  border-color: #d32f2f;
-  background-color: #fff5f5;
+  border-color: var(--error);
+  background-color: var(--error-bg);
 }
 
 input.error:focus {
-  border-color: #d32f2f;
-  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+  border-color: var(--error);
+  box-shadow: 0 0 0 2px var(--border-focus-shadow);
 }
 </style>

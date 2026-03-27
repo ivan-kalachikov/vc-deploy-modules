@@ -1,0 +1,175 @@
+/* ===== Reset ===== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  font-weight: normal;
+}
+
+/* ===== Design Tokens: Light (default) ===== */
+:root {
+  --surface-primary: #ffffff;
+  --surface-secondary: #f8f8f8;
+  --surface-tertiary: #f0f0f0;
+  --surface-card: #ffffff;
+  --surface-app: #1a1a2e;
+
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --text-inverse: #ffffff;
+  --text-on-primary: #ffffff;
+
+  --border-primary: #dddddd;
+  --border-secondary: #cccccc;
+  --border-focus: #007bff;
+  --border-focus-shadow: rgba(0, 123, 255, 0.1);
+
+  --primary: #4a6ee0;
+  --primary-hover: #3d5bc4;
+  --primary-disabled: #a0acd7;
+  --primary-text: #4a6ee0;
+
+  --success: #52c41a;
+  --success-hover: #389e0d;
+  --success-bg: #e8f5e9;
+  --success-text: #1b5e20;
+
+  --error: #d32f2f;
+  --error-hover: #c62828;
+  --error-bg: #fff5f5;
+  --error-bg-hover: #fff1f0;
+  --error-text: #ff4d4f;
+  --error-border: #ffccc7;
+  --error-border-hover: #ffa39e;
+
+  --warning-bg: #fff0c0;
+
+  --link: #0366d6;
+  --link-hover: #0550ae;
+
+  --diff-old-text: #cc0000;
+  --diff-old-bg: #ffebee;
+  --diff-new-text: #1b5e20;
+  --diff-new-bg: #e8f5e9;
+
+  --code-bg: #f5f5f5;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  --transition-fast: 0.2s ease;
+  --transition-color: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+
+  --progress-bar: #4caf50;
+  --scrollbar-track: #f1f1f1;
+  --scrollbar-thumb: #c1c1c1;
+  --scrollbar-thumb-hover: #a8a8a8;
+}
+
+/* ===== Design Tokens: Dark ===== */
+html[data-theme="dark"] {
+  --surface-primary: #1a1a1a;
+  --surface-secondary: #1e1e1e;
+  --surface-tertiary: #2a2a2a;
+  --surface-card: #2a2a2a;
+  --surface-app: #0d0d1a;
+
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-tertiary: #707070;
+  --text-inverse: #1a1a1a;
+
+  --border-primary: #404040;
+  --border-secondary: #505050;
+  --border-focus: #6b8df5;
+  --border-focus-shadow: rgba(107, 141, 245, 0.2);
+
+  --primary: #6b8df5;
+  --primary-hover: #5a7de8;
+  --primary-disabled: #4a5a80;
+  --primary-text: #6b8df5;
+
+  --success: #73d13d;
+  --success-hover: #52c41a;
+  --success-bg: #1a2e1a;
+  --success-text: #73d13d;
+
+  --error: #ff6b6b;
+  --error-hover: #ff4d4f;
+  --error-bg: #2e1a1a;
+  --error-bg-hover: #3a1a1a;
+  --error-text: #ff6b6b;
+  --error-border: #5a2a2a;
+  --error-border-hover: #6a3a3a;
+
+  --warning-bg: #3a3520;
+
+  --link: #6b8df5;
+  --link-hover: #8aa4f7;
+
+  --diff-old-text: #ff6b6b;
+  --diff-old-bg: #2e1a1a;
+  --diff-new-text: #73d13d;
+  --diff-new-bg: #1a2e1a;
+
+  --code-bg: #2a2a2a;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+
+  --progress-bar: #52c41a;
+  --scrollbar-track: #2a2a2a;
+  --scrollbar-thumb: #505050;
+  --scrollbar-thumb-hover: #606060;
+}
+
+/* ===== Body Defaults ===== */
+body {
+  min-height: 100vh;
+  background: var(--surface-app);
+  color: var(--text-primary);
+  transition: var(--transition-color);
+  line-height: 1.6;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== App Layout ===== */
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-weight: normal;
+}
+
+@media (min-width: 1024px) {
+  body {
+    display: flex;
+    place-items: center;
+  }
+
+  #app {
+    padding: 0 2rem;
+    width: calc(100% - 30px);
+  }
+}
