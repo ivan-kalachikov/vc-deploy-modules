@@ -7,6 +7,10 @@
   font-weight: normal;
 }
 
+strong, b {
+  font-weight: 700;
+}
+
 /* ===== Design Tokens: Light (default) ===== */
 :root {
   --surface-primary: #ffffff;

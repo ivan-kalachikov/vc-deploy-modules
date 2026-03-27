@@ -204,7 +204,6 @@ h2 {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-secondary);
   background: var(--surface-card);
-  overflow: hidden;
 }
 
 .editor-wrap:focus-within {
@@ -230,6 +229,7 @@ h2 {
 .editor-backdrop {
   color: var(--text-primary);
   pointer-events: none;
+  border-radius: var(--radius-sm);
 }
 
 .editor-backdrop :deep(.json-key) { color: var(--json-key); }
@@ -249,6 +249,7 @@ h2 {
   caret-color: var(--text-primary);
   border: none;
   outline: none;
+  border-radius: var(--radius-sm);
 }
 
 .error {
