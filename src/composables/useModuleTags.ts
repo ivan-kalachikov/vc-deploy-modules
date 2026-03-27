@@ -77,8 +77,8 @@ export function useModuleTags() {
 
           if (rateLimited && rateLimited.status === 'rejected') {
             const wait = (rateLimited.reason as RateLimitError).retryAfterSeconds
-            updateProgress.value.status = `Rate limited — waiting ${wait}s then stopping...`
-            addToast(`GitHub rate limit hit. Updated ${updatedCount} modules before stopping. Try again in ${wait}s.`, 'error', wait * 1000)
+            updateProgress.value.status = `Rate limited — retry in ${wait}s`
+            addToast(`GitHub rate limit hit. ${updatedCount} modules updated. Retry in ${wait}s.`, 'error', wait * 1000)
             break
           }
 
