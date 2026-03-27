@@ -83,11 +83,6 @@ const handleCopy = async () => {
         <h1>Module Configuration Manager</h1>
       </div>
       <div class="header-right">
-        <button
-          v-if="config && hasInvalidInputs"
-          class="action-button error-button"
-          @click="scrollToFirstInvalidInput"
-        >Errors</button>
         <ThemeToggle />
       </div>
     </header>
@@ -112,7 +107,7 @@ const handleCopy = async () => {
       <div class="main-layout">
         <div class="config-column">
           <PlatformConfig ref="platformConfigRef" :config="config" @update="updatePlatform" />
-          <ModuleList ref="moduleListRef" :config="config" :sort-enabled="shouldSortModules" @module-update="updateModule" />
+          <ModuleList ref="moduleListRef" :config="config" :original-config="originalConfig" :sort-enabled="shouldSortModules" @module-update="updateModule" />
         </div>
         <div class="sidebar">
           <div class="sidebar-actions">
@@ -120,6 +115,11 @@ const handleCopy = async () => {
             <button class="action-button" @click="handleCopy">Copy</button>
             <button class="reset-button" :disabled="!changes.length" @click="resetToOriginal">Reset</button>
           </div>
+          <button
+            v-if="hasInvalidInputs"
+            class="sidebar-error"
+            @click="scrollToFirstInvalidInput"
+          >Some fields have invalid values</button>
           <DiffPreview
             :changes="changes"
             @scroll-to-module="scrollToModule"
@@ -266,6 +266,24 @@ h1 {
 .sidebar-actions {
   display: flex;
   gap: 8px;
+}
+
+.sidebar-error {
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-sm);
+  color: var(--error-text);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.sidebar-error:hover {
+  background: var(--error-bg-hover);
+  border-color: var(--error);
 }
 
 /* Popover */

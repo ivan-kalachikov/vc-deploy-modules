@@ -9,6 +9,7 @@ import BulkUpdateButton from './BulkUpdateButton.vue'
 
 const props = defineProps<{
   config: ConfigurationData
+  originalConfig: ConfigurationData | null
   sortEnabled: boolean
 }>()
 
@@ -21,6 +22,24 @@ const { isUpdatingAll, updateProgress, loadTags, loadCachedTags, updateAllToLate
 const { addToast } = useToast()
 
 // Convert config data to view models
+const findOriginal = (moduleId: string): { value: string; sourceType: ModuleType } | null => {
+  if (!props.originalConfig) return null
+  for (const source of props.originalConfig.Sources) {
+    const mod = source.Modules.find(m =>
+      source.Name === 'GithubReleases'
+        ? m.Id === moduleId
+        : m.BlobName?.startsWith(moduleId + '_'),
+    )
+    if (mod) {
+      const val = source.Name === 'GithubReleases'
+        ? mod.Version || ''
+        : mod.BlobName?.split('_')[1] || ''
+      return { value: val, sourceType: source.Name }
+    }
+  }
+  return null
+}
+
 const buildViewModels = (config: ConfigurationData): ModuleViewModel[] => {
   const vms: ModuleViewModel[] = []
   config.Sources.forEach(source => {
@@ -34,7 +53,12 @@ const buildViewModels = (config: ConfigurationData): ModuleViewModel[] => {
         ? module.Version || ''
         : module.BlobName?.split('_')[1] || ''
 
-      vms.push({ id: moduleId, value, sourceType: source.Name })
+      const orig = findOriginal(moduleId)
+      vms.push({
+        id: moduleId, value, sourceType: source.Name,
+        originalValue: orig?.value,
+        originalSourceType: orig?.sourceType,
+      })
     })
   })
   return vms
@@ -76,6 +100,33 @@ const handleInputChange = (moduleId: string, type: ModuleType, value: string) =>
     ? trimmed
     : `${moduleId}_${trimmed}`
   emit('module-update', moduleId, type, fullValue)
+}
+
+// Revert a single module to its original state
+const handleRevert = (moduleId: string, currentType: ModuleType) => {
+  const module = modules.value.find(m => m.id === moduleId && m.sourceType === currentType)
+  if (!module || !module.originalSourceType) return
+
+  if (module.originalSourceType !== currentType) {
+    // Was moved — move it back and set original value
+    moveModule(moduleId, currentType, module.originalSourceType).then(() => {
+      const restored = modules.value.find(m => m.id === moduleId)
+      if (restored && module.originalValue !== undefined) {
+        restored.value = module.originalValue
+        const fullValue = module.originalSourceType === 'GithubReleases'
+          ? module.originalValue
+          : `${moduleId}_${module.originalValue}`
+        emit('module-update', moduleId, module.originalSourceType, fullValue)
+      }
+    })
+  } else {
+    // Same source, just revert value
+    module.value = module.originalValue || ''
+    const fullValue = currentType === 'GithubReleases'
+      ? module.value
+      : `${moduleId}_${module.value}`
+    emit('module-update', moduleId, currentType, fullValue)
+  }
 }
 
 // Move module between sources
@@ -149,15 +200,16 @@ defineExpose({ hasInvalidInputs, scrollToFirstInvalidInput })
       :modules="azureModules"
       @module-update="handleInputChange"
       @module-move="moveModule"
+      @module-revert="handleRevert"
       @tags-loaded="handleTagsLoaded"
     />
-
 
     <ModuleSourceSection
       source-type="GithubReleases"
       :modules="githubModules"
       @module-update="handleInputChange"
       @module-move="moveModule"
+      @module-revert="handleRevert"
       @tags-loaded="handleTagsLoaded"
     >
       <template #header-actions>

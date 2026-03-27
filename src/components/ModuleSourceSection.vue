@@ -10,6 +10,7 @@ defineProps<{
 const emit = defineEmits<{
   'module-update': [moduleId: string, type: ModuleType, value: string]
   'module-move': [moduleId: string, fromType: ModuleType, toType: ModuleType]
+  'module-revert': [moduleId: string, type: ModuleType]
   'tags-loaded': [moduleId: string, tags: string[]]
 }>()
 
@@ -32,6 +33,7 @@ const sectionTitle = (type: ModuleType): string =>
           :source-type="sourceType"
           @update="(id, type, val) => emit('module-update', id, type, val)"
           @move="(id, from, to) => emit('module-move', id, from, to)"
+          @revert="(id, type) => emit('module-revert', id, type)"
           @tags-loaded="(id, tags) => emit('tags-loaded', id, tags)"
         />
       </div>

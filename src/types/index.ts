@@ -37,6 +37,8 @@ export interface ModuleViewModel {
   id: string
   value: string
   sourceType: ModuleType
+  originalValue?: string
+  originalSourceType?: ModuleType
   tags?: string[]
   isLoadingTags?: boolean
 }

@@ -12,6 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update': [moduleId: string, type: ModuleType, value: string]
   'move': [moduleId: string, fromType: ModuleType, toType: ModuleType]
+  'revert': [moduleId: string, type: ModuleType]
   'tags-loaded': [moduleId: string, tags: string[]]
 }>()
 
@@ -21,6 +22,10 @@ const toggleSource = () => {
   const to: ModuleType = isGitHub() ? 'AzureBlob' : 'GithubReleases'
   emit('move', props.module.id, props.sourceType, to)
 }
+
+const isChanged = () =>
+  props.module.originalValue !== undefined &&
+  (props.module.value !== props.module.originalValue || props.sourceType !== props.module.originalSourceType)
 </script>
 
 <template>
@@ -50,6 +55,12 @@ const toggleSource = () => {
           @tags-loaded="(id: string, tags: string[]) => emit('tags-loaded', id, tags)"
         />
       </div>
+      <button
+        v-if="isChanged()"
+        class="revert-button"
+        title="Revert to original"
+        @click="emit('revert', module.id, sourceType)"
+      >Undo</button>
     </div>
   </div>
 </template>
@@ -116,5 +127,21 @@ const toggleSource = () => {
 .input-container {
   flex: 1;
   min-width: 0;
+}
+
+.revert-button {
+  padding: 4px 8px;
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--error-text);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.revert-button:hover {
+  background: var(--error-bg);
 }
 </style>
