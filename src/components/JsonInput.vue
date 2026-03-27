@@ -25,6 +25,17 @@ const handleTextareaInput = (e: Event) => {
   jsonInput.value = (e.target as HTMLTextAreaElement).value
 }
 
+// Convert GitHub blob/tree URLs to raw.githubusercontent.com
+// e.g. https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json
+//   -> https://raw.githubusercontent.com/VirtoCommerce/vc-deploy-dev/vcst-dev/backend/packages.json
+function toRawUrl(url: string): string {
+  const ghMatch = url.match(
+    /^https?:\/\/github\.com\/([^/]+\/[^/]+)\/(?:blob|tree)\/(.+)$/,
+  )
+  if (ghMatch) return `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}`
+  return url
+}
+
 async function fetchAndSubmit(url: string) {
   const trimmed = url.trim()
   if (!trimmed) return
@@ -32,11 +43,12 @@ async function fetchAndSubmit(url: string) {
   isLoading.value = true
   error.value = ''
   try {
-    const response = await fetch(trimmed)
+    const rawUrl = toRawUrl(trimmed)
+    const response = await fetch(rawUrl)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const text = await response.text()
     JSON.parse(text) // validate
-    addEntry(trimmed)
+    addEntry(trimmed) // store original URL, not raw
     emit('submit', text)
   } catch (e) {
     error.value = `Failed to fetch: ${(e as Error).message}`
