@@ -39,12 +39,9 @@ const toggleSource = () => {
     <div class="module-controls">
       <button
         class="source-toggle"
-        :class="{ github: isGitHub() }"
-        :title="isGitHub() ? 'Switch to Azure Blob' : 'Switch to GitHub Releases'"
+        :title="isGitHub() ? 'Move to Azure Blob' : 'Move to GitHub Releases'"
         @click="toggleSource"
-      >
-        <span class="toggle-label">{{ isGitHub() ? 'GH' : 'Az' }}</span>
-      </button>
+      >{{ isGitHub() ? '→ Blob' : '→ Releases' }}</button>
       <div class="input-container">
         <VersionCombobox
           :module="module"
