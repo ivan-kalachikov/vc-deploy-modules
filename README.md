@@ -9,7 +9,7 @@ Load a manifest from URL or paste it, edit module versions and sources visually,
 
 **Live:** [ivan-kalachikov.github.io/vc-deploy-modules](https://ivan-kalachikov.github.io/vc-deploy-modules/)
 
-**Quick link with manifest:** `?manifest-url=https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json`
+**Quick link with manifest:** [open with vcst-dev manifest](https://ivan-kalachikov.github.io/vc-deploy-modules/?manifest-url=https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json)
 
 ---
 
@@ -25,6 +25,7 @@ Load a manifest from URL or paste it, edit module versions and sources visually,
 - Version dropdown with available releases from GitHub
 - Pick a PR to get pre-release artifact version
 - Move modules between Azure Blob and GitHub Releases
+- Update all GitHub modules to latest versions in one click
 - Update all GitHub modules to latest versions in one click
 - Auto-assign latest tag when moving to Releases
 
