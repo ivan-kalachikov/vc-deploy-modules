@@ -143,7 +143,7 @@ const handleCopy = async () => {
       </div>
     </div>
 
-    <button v-if="showScrollTop" class="scroll-top" @click="scrollToTop" title="Scroll to top">Top</button>
+    <button v-if="showScrollTop" class="scroll-top" @click="scrollToTop" title="Scroll to top">&uarr;</button>
     <ToastContainer />
   </div>
 </template>
@@ -378,13 +378,14 @@ h1 {
 .scroll-top {
   position: fixed;
   bottom: 24px;
-  right: 24px;
-  padding: 6px 12px;
+  right: calc(50% - 920px);
+  padding: 8px 12px;
   background: var(--surface-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
   transition: all var(--transition-fast);
   z-index: 50;
@@ -393,5 +394,11 @@ h1 {
 .scroll-top:hover {
   background: var(--surface-tertiary);
   color: var(--text-primary);
+}
+
+@media (max-width: 1900px) {
+  .scroll-top {
+    right: 12px;
+  }
 }
 </style>
