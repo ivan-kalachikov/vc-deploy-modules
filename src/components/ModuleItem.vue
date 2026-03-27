@@ -2,8 +2,7 @@
 import type { ModuleViewModel, ModuleType } from '../types'
 import { formatModuleId } from '../utils/helpers'
 import { getGitHubRepoUrl } from '../config/moduleRepoMapping'
-import GitHubVersionInput from './GitHubVersionInput.vue'
-import AzureBlobInput from './AzureBlobInput.vue'
+import VersionCombobox from './VersionCombobox.vue'
 
 const props = defineProps<{
   module: ModuleViewModel
@@ -13,7 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update': [moduleId: string, type: ModuleType, value: string]
   'move': [moduleId: string, fromType: ModuleType, toType: ModuleType]
-  'load-tags': [moduleId: string]
+  'tags-loaded': [moduleId: string, tags: string[]]
 }>()
 
 const onSourceTypeChange = (e: Event) => {
@@ -41,16 +40,11 @@ const onSourceTypeChange = (e: Event) => {
         <option value="AzureBlob">Azure Blob</option>
       </select>
       <div class="input-container">
-        <GitHubVersionInput
-          v-if="sourceType === 'GithubReleases'"
+        <VersionCombobox
           :module="module"
+          :source-type="sourceType"
           @change="(val: string) => emit('update', module.id, sourceType, val)"
-          @load-tags="emit('load-tags', module.id)"
-        />
-        <AzureBlobInput
-          v-else
-          :module="module"
-          @change="(val: string) => emit('update', module.id, sourceType, val)"
+          @tags-loaded="(id: string, tags: string[]) => emit('tags-loaded', id, tags)"
         />
       </div>
     </div>
@@ -116,19 +110,6 @@ const onSourceTypeChange = (e: Event) => {
   min-width: 0;
 }
 
-.input-container input {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid var(--border-secondary);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: monospace;
-  background: var(--surface-card);
-  color: var(--text-primary);
-  min-width: 0;
-}
-
-.input-container input:focus,
 .module-controls select:focus {
   outline: none;
   border-color: var(--border-focus);
@@ -137,19 +118,5 @@ const onSourceTypeChange = (e: Event) => {
 
 .module-controls select {
   cursor: pointer;
-}
-
-.input-container input::placeholder {
-  color: var(--text-tertiary);
-}
-
-.input-container input.error {
-  border-color: var(--error);
-  background-color: var(--error-bg);
-}
-
-.input-container input.error:focus {
-  border-color: var(--error);
-  box-shadow: 0 0 0 2px var(--error-focus-shadow);
 }
 </style>

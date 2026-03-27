@@ -108,10 +108,10 @@ const handleUpdateAll = async () => {
   }
 }
 
-// Load tags for a single module
-const handleLoadTags = (moduleId: string) => {
+// Handle tags loaded from VersionCombobox
+const handleTagsLoaded = (moduleId: string, tags: string[]) => {
   const module = modules.value.find(m => m.id === moduleId)
-  if (module) loadTags(module, true)
+  if (module) module.tags = tags
 }
 
 // Validation
@@ -146,7 +146,7 @@ defineExpose({ hasInvalidInputs, scrollToFirstInvalidInput })
       :modules="azureModules"
       @module-update="handleInputChange"
       @module-move="moveModule"
-      @load-tags="handleLoadTags"
+      @tags-loaded="handleTagsLoaded"
     />
 
 
@@ -155,7 +155,7 @@ defineExpose({ hasInvalidInputs, scrollToFirstInvalidInput })
       :modules="githubModules"
       @module-update="handleInputChange"
       @module-move="moveModule"
-      @load-tags="handleLoadTags"
+      @tags-loaded="handleTagsLoaded"
     >
       <template #header-actions>
         <BulkUpdateButton
