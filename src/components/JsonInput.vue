@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useUrlSearchParams } from '@vueuse/core'
 import { useManifestHistory } from '../composables/useManifestHistory'
 import { useToast } from '../composables/useToast'
@@ -14,15 +14,14 @@ const error = ref('')
 const { history, addEntry, removeEntry, touchEntry } = useManifestHistory()
 const { addToast } = useToast()
 
-// Auto-fetch from manifest-url query param on mount
-onMounted(() => {
-  const urlParam = params['manifest-url']
-  const url = Array.isArray(urlParam) ? urlParam[0] : urlParam
-  if (url) {
-    jsonUrl.value = url
-    fetchAndSubmit(url)
-  }
-})
+// Check URL param synchronously — start fetch before first render
+const initialUrlParam = params['manifest-url']
+const initialUrl = Array.isArray(initialUrlParam) ? initialUrlParam[0] : initialUrlParam
+if (initialUrl) {
+  jsonUrl.value = initialUrl
+  isLoading.value = true
+  fetchAndSubmit(initialUrl)
+}
 
 const emit = defineEmits<{
   submit: [value: string]
@@ -79,7 +78,12 @@ function handleHistoryClick(url: string) {
 </script>
 
 <template>
-  <div class="json-input">
+  <!-- Loading state when auto-fetching from URL param -->
+  <div v-if="isLoading && initialUrl" class="json-input loading-state">
+    <p>Loading manifest from URL...</p>
+  </div>
+
+  <div v-else class="json-input">
     <!-- URL Input -->
     <h2>Load from URL</h2>
     <div class="url-row">
@@ -140,6 +144,19 @@ h2 {
   margin-bottom: 16px;
   font-size: 22px;
   font-weight: 600;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.loading-state p {
+  color: var(--text-on-app);
+  font-size: 16px;
+  opacity: 0.7;
 }
 
 .paste-heading {

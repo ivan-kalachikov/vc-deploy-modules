@@ -13,7 +13,7 @@
   --surface-secondary: #f8f8f8;
   --surface-tertiary: #f0f0f0;
   --surface-card: #ffffff;
-  --surface-app: #1a1a2e;
+  --surface-app: #f0f2f5;
 
   --text-primary: #333333;
   --text-secondary: #666666;
@@ -48,7 +48,7 @@
 
   --error-focus-shadow: rgba(211, 47, 47, 0.1);
 
-  --text-on-app: #ffffff;
+  --text-on-app: #333333;
 
   --link: #0366d6;
   --link-hover: #0550ae;
