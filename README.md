@@ -18,16 +18,18 @@ Load a manifest from URL or paste it, edit module versions and sources visually,
 
 **Editing**
 - Edit platform settings and module versions
+- Add or remove modules
 - Version dropdown with available releases from GitHub
 - Pick a PR to get pre-release artifact version
 - Move modules between Azure Blob and GitHub Releases
 - Update all GitHub modules to latest versions in one click
 
 **Tracking**
-- Real-time diff sidebar
-- Per-module undo
+- Real-time diff sidebar with change counter
+- Per-module undo (inline and in sidebar)
 - Global reset
-- Validation with scroll-to-error
+- Collapsible module sections
+- Validation with error count and click-to-iterate
 
 **Output**
 - JSON preview with syntax highlighting
