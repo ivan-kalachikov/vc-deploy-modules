@@ -181,6 +181,6 @@ const azureTitle = (value: string): string => {
 
 .input-container input.error:focus {
   border-color: var(--error);
-  box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
+  box-shadow: 0 0 0 2px var(--error-focus-shadow);
 }
 </style>

@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+const props = defineProps<{
+  initialSort?: boolean
+}>()
+
 const jsonInput = ref('')
-const sortModules = ref(true)
+const sortModules = ref(props.initialSort ?? true)
 const error = ref('')
 
 const emit = defineEmits<{
@@ -83,7 +87,7 @@ button:hover {
 }
 
 h2 {
-  color: var(--text-inverse);
+  color: var(--text-on-app);
   margin-bottom: 30px;
   font-size: 22px;
   font-weight: 600;
@@ -100,7 +104,7 @@ h2 {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-inverse);
+  color: var(--text-on-app);
   cursor: pointer;
   user-select: none;
 }

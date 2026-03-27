@@ -54,7 +54,7 @@ const handleJsonSubmit = (jsonString: string, sort: boolean) => {
     </header>
 
     <div v-if="!config" class="json-input-container">
-      <JsonInput @submit="handleJsonSubmit" />
+      <JsonInput :initial-sort="shouldSortModules" @submit="handleJsonSubmit" />
     </div>
 
     <template v-else>
@@ -98,7 +98,7 @@ const handleJsonSubmit = (jsonString: string, sort: boolean) => {
 }
 
 h1 {
-  color: var(--text-inverse);
+  color: var(--text-on-app);
   font-size: 28px;
   font-weight: 600;
 }

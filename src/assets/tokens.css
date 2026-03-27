@@ -46,6 +46,10 @@
 
   --warning-bg: #fff0c0;
 
+  --error-focus-shadow: rgba(211, 47, 47, 0.1);
+
+  --text-on-app: #ffffff;
+
   --link: #0366d6;
   --link-hover: #0550ae;
 
@@ -108,6 +112,10 @@ html[data-theme="dark"] {
   --error-border-hover: #6a3a3a;
 
   --warning-bg: #3a3520;
+
+  --error-focus-shadow: rgba(255, 107, 107, 0.15);
+
+  --text-on-app: #e0e0e0;
 
   --link: #6b8df5;
   --link-hover: #8aa4f7;
