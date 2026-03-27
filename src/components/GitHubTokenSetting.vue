@@ -42,9 +42,11 @@ const remove = () => {
         scoped to your organization.
       </p>
       <p class="token-hint">
-        No extra permissions needed. Token lifetime must be 366 days or less.
+        <strong>No extra permissions needed.</strong>
+        If you grant additional permissions, you do so at your own risk.
+        Token lifetime must be 366 days or less.
       </p>
-      <p class="token-hint"><strong>Stored in your browser only.</strong></p>
+      <p class="token-hint"><strong>Stored in your browser only.</strong> Never sent anywhere except <code>api.github.com</code>. You can remove it anytime using the button below or by clearing your browser's local storage. For extra safety, use a dedicated token and revoke it when no longer needed.</p>
       <div class="token-input-row">
         <input
           v-model="token"
