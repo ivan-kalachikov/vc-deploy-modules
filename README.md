@@ -16,7 +16,7 @@ Load a manifest from URL or paste it, edit module versions and sources visually,
 ## Features
 
 **Loading**
-- Fetch manifest from URL (GitHub blob URLs auto-converted to raw)
+- Load manifest from URL
 - Paste JSON directly
 - Manifest URL history (localStorage, click to reload)
 - Shareable `?manifest-url=` deep links
