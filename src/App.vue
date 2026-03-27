@@ -13,6 +13,7 @@ import ThemeToggle from './components/ThemeToggle.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import SkeletonLoader from './components/SkeletonLoader.vue'
 import { useToast } from './composables/useToast'
+import { highlightJson } from './utils/jsonHighlight'
 
 const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform, resetToOriginal } = useConfigState()
 const { generateJson, copyToClipboard } = useJsonGenerator()
@@ -24,6 +25,7 @@ const moduleListRef = ref<InstanceType<typeof ModuleList> | null>(null)
 const platformConfigRef = ref<InstanceType<typeof PlatformConfig> | null>(null)
 
 const json = computed(() => generateJson(config.value, shouldSortModules.value))
+const jsonHtml = computed(() => highlightJson(json.value))
 
 const hasInvalidInputs = computed(() =>
   moduleListRef.value?.hasInvalidInputs || platformConfigRef.value?.hasInvalidInputs
@@ -129,7 +131,7 @@ const handleCopy = async () => {
     <!-- JSON Preview Popover -->
     <div id="json-preview" popover class="preview-popover">
       <div class="popover-content">
-        <pre>{{ json }}</pre>
+        <pre v-html="jsonHtml"></pre>
       </div>
     </div>
 
@@ -298,6 +300,11 @@ h1 {
   white-space: pre-wrap;
   word-break: break-word;
 }
+
+.popover-content :deep(.json-key) { color: var(--json-key); }
+.popover-content :deep(.json-string) { color: var(--json-string); }
+.popover-content :deep(.json-number) { color: var(--json-number); }
+.popover-content :deep(.json-bool) { color: var(--json-bool); }
 
 @keyframes highlight {
   0% { background-color: transparent; }
