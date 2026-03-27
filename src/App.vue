@@ -163,6 +163,7 @@ const handleCopy = async () => {
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
+  container-type: inline-size;
 }
 
 .app-header {
@@ -413,6 +414,41 @@ h1 {
 @media (max-width: 1380px) {
   .scroll-buttons {
     right: 12px;
+  }
+}
+
+/* Responsive: stack layout when container is narrow */
+@container (max-width: 800px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    max-height: none;
+  }
+
+  .app-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  .json-input-container {
+    max-width: 100%;
+  }
+}
+
+@container (max-width: 500px) {
+  .app {
+    padding: 12px;
+  }
+
+  .app-header {
+    margin-bottom: 16px;
   }
 }
 </style>

@@ -50,6 +50,7 @@ const sectionTitle = (type: ModuleType): string =>
   background: var(--surface-secondary);
   border-radius: var(--radius-md);
   padding: 20px;
+  container-type: inline-size;
 }
 
 .section-container h2 {
@@ -90,5 +91,16 @@ const sectionTitle = (type: ModuleType): string =>
 
 .modules::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
+}
+
+@container (max-width: 500px) {
+  .section-container {
+    padding: 12px;
+  }
+
+  .section-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 }
 </style>
