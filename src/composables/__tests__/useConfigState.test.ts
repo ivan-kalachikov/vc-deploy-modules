@@ -1,11 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { toRaw } from 'vue'
-import { useConfigState } from '../useConfigState'
 import type { ConfigurationData } from '../../types'
 
 // structuredClone in jsdom cannot handle Vue reactive proxies.
-// Provide a JSON-based polyfill that unwraps proxies first.
-const originalStructuredClone = globalThis.structuredClone
 vi.stubGlobal('structuredClone', <T>(val: T): T =>
   JSON.parse(JSON.stringify(val)),
 )
@@ -56,12 +52,20 @@ describe('useConfigState', () => {
       }),
     }
     vi.stubGlobal('localStorage', localStorageMock)
+
+    // Reset module to get fresh singleton state for each test
+    vi.resetModules()
   })
 
+  async function loadFresh() {
+    const mod = await import('../useConfigState')
+    return mod.useConfigState()
+  }
+
   describe('parseConfig', () => {
-    it('sets config and originalConfig from valid JSON', () => {
-      const { config, originalConfig, jsonError, parseConfig } = useConfigState()
-      parseConfig(makeJsonString(), true)
+    it('sets config and originalConfig from valid JSON', async () => {
+      const { config, originalConfig, jsonError, parseConfig } = await loadFresh()
+      parseConfig(makeJsonString())
 
       expect(config.value).not.toBeNull()
       expect(originalConfig.value).not.toBeNull()
@@ -69,37 +73,27 @@ describe('useConfigState', () => {
       expect(jsonError.value).toBe('')
     })
 
-    it('sets config and originalConfig as independent copies', () => {
-      const { config, originalConfig, parseConfig } = useConfigState()
-      parseConfig(makeJsonString(), true)
+    it('sets config and originalConfig as independent copies', async () => {
+      const { config, originalConfig, parseConfig } = await loadFresh()
+      parseConfig(makeJsonString())
 
-      // Mutate config - originalConfig should remain unchanged
       config.value!.PlatformVersion = '9.9.9'
       expect(originalConfig.value!.PlatformVersion).toBe('3.809.0')
     })
 
-    it('sets error on invalid JSON', () => {
-      const { config, jsonError, parseConfig } = useConfigState()
-      parseConfig('not valid json', false)
+    it('sets error on invalid JSON', async () => {
+      const { config, jsonError, parseConfig } = await loadFresh()
+      parseConfig('not valid json')
 
       expect(jsonError.value).toContain('Invalid JSON format')
       expect(config.value).toBeNull()
     })
-
-    it('sets shouldSortModules from sort parameter', () => {
-      const { shouldSortModules, parseConfig } = useConfigState()
-      parseConfig(makeJsonString(), false)
-      expect(shouldSortModules.value).toBe(false)
-
-      parseConfig(makeJsonString(), true)
-      expect(shouldSortModules.value).toBe(true)
-    })
   })
 
   describe('updateModule', () => {
-    it('updates version for a GithubReleases module', () => {
-      const { config, parseConfig, updateModule } = useConfigState()
-      parseConfig(makeJsonString(), false)
+    it('updates version for a GithubReleases module', async () => {
+      const { config, parseConfig, updateModule } = await loadFresh()
+      parseConfig(makeJsonString())
 
       updateModule('VirtoCommerce.Orders', 'GithubReleases', '3.900.0')
 
@@ -112,9 +106,9 @@ describe('useConfigState', () => {
       expect(ordersModule!.Version).toBe('3.900.0')
     })
 
-    it('updates BlobName for an AzureBlob module', () => {
-      const { config, parseConfig, updateModule } = useConfigState()
-      parseConfig(makeJsonString(), false)
+    it('updates BlobName for an AzureBlob module', async () => {
+      const { config, parseConfig, updateModule } = await loadFresh()
+      parseConfig(makeJsonString())
 
       updateModule(
         'VirtoCommerce.Notifications',
@@ -131,9 +125,9 @@ describe('useConfigState', () => {
       expect(mod!.BlobName).toBe('VirtoCommerce.Notifications_2.0.0.zip')
     })
 
-    it('deletes a module with __DELETE__', () => {
-      const { config, parseConfig, updateModule } = useConfigState()
-      parseConfig(makeJsonString(), false)
+    it('deletes a module with __DELETE__', async () => {
+      const { config, parseConfig, updateModule } = await loadFresh()
+      parseConfig(makeJsonString())
 
       updateModule('VirtoCommerce.Orders', 'GithubReleases', '__DELETE__')
 
@@ -146,9 +140,9 @@ describe('useConfigState', () => {
       expect(ordersModule).toBeUndefined()
     })
 
-    it('adds a new module when not found', () => {
-      const { config, parseConfig, updateModule } = useConfigState()
-      parseConfig(makeJsonString(), false)
+    it('adds a new module when not found', async () => {
+      const { config, parseConfig, updateModule } = await loadFresh()
+      parseConfig(makeJsonString())
 
       updateModule('VirtoCommerce.NewModule', 'GithubReleases', '1.0.0')
 
@@ -162,16 +156,15 @@ describe('useConfigState', () => {
       expect(newModule!.Version).toBe('1.0.0')
     })
 
-    it('does nothing when config is null', () => {
-      const { updateModule } = useConfigState()
-      // Should not throw
+    it('does nothing when config is null', async () => {
+      const { updateModule } = await loadFresh()
       expect(() =>
         updateModule('VirtoCommerce.Orders', 'GithubReleases', '1.0.0'),
       ).not.toThrow()
     })
 
-    it('does nothing when source type not found', () => {
-      const { config, parseConfig, updateModule } = useConfigState()
+    it('does nothing when source type not found', async () => {
+      const { config, parseConfig, updateModule } = await loadFresh()
       const jsonStr = JSON.stringify({
         ManifestVersion: '2.0',
         PlatformVersion: '3.809.0',
@@ -187,19 +180,17 @@ describe('useConfigState', () => {
           },
         ],
       })
-      parseConfig(jsonStr, false)
+      parseConfig(jsonStr)
 
-      // AzureBlob source doesn't exist in this config
       updateModule('SomeModule', 'AzureBlob', '1.0.0')
-      // Should not add a source or throw
       expect(config.value!.Sources).toHaveLength(1)
     })
   })
 
   describe('updatePlatform', () => {
-    it('replaces config with new config', () => {
-      const { config, parseConfig, updatePlatform } = useConfigState()
-      parseConfig(makeJsonString(), false)
+    it('replaces config with new config', async () => {
+      const { config, parseConfig, updatePlatform } = await loadFresh()
+      parseConfig(makeJsonString())
 
       const newConfig: ConfigurationData = JSON.parse(JSON.stringify(config.value!))
       newConfig.PlatformVersion = '4.0.0'
@@ -210,22 +201,21 @@ describe('useConfigState', () => {
   })
 
   describe('shouldSortModules', () => {
-    it('defaults to true when no localStorage value', () => {
-      const { shouldSortModules } = useConfigState()
+    it('defaults to true when no localStorage value', async () => {
+      const { shouldSortModules } = await loadFresh()
       expect(shouldSortModules.value).toBe(true)
     })
 
-    it('reads initial value from localStorage', () => {
+    it('reads initial value from localStorage', async () => {
       storage['sort-modules-preference'] = 'false'
-      const { shouldSortModules } = useConfigState()
+      const { shouldSortModules } = await loadFresh()
       expect(shouldSortModules.value).toBe(false)
     })
 
     it('persists changes to localStorage via watcher', async () => {
-      const { shouldSortModules } = useConfigState()
+      const { shouldSortModules } = await loadFresh()
       shouldSortModules.value = false
 
-      // Vue watchers are async; flush
       await new Promise((r) => setTimeout(r, 0))
       expect(localStorage.setItem).toHaveBeenCalledWith(
         'sort-modules-preference',

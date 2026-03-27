@@ -1,54 +1,19 @@
-import { ref, watch } from 'vue'
+import { computed, watch } from 'vue'
+import { useStorage, usePreferredDark } from '@vueuse/core'
 
 type ThemeMode = 'light' | 'dark' | 'system'
 
-const STORAGE_KEY = 'theme-preference'
+const mode = useStorage<ThemeMode>('theme-preference', 'system')
+const prefersDark = usePreferredDark()
 
-function loadInitialMode(): ThemeMode {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored === 'light' || stored === 'dark' || stored === 'system') {
-      return stored
-    }
-  } catch {
-    // localStorage unavailable
-  }
-  return 'system'
-}
+const resolvedTheme = computed<'light' | 'dark'>(() =>
+  mode.value === 'system'
+    ? (prefersDark.value ? 'dark' : 'light')
+    : mode.value,
+)
 
-function resolveTheme(m: ThemeMode): 'light' | 'dark' {
-  if (m === 'system') {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-  }
-  return m
-}
-
-function applyTheme(theme: 'light' | 'dark') {
+watch(resolvedTheme, (theme) => {
   document.documentElement.dataset.theme = theme
-}
-
-// Module-level singleton state
-const mode = ref<ThemeMode>(loadInitialMode())
-const resolvedTheme = ref<'light' | 'dark'>(resolveTheme(mode.value))
-
-// Listen to OS changes when in system mode
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-mediaQuery.addEventListener('change', () => {
-  if (mode.value === 'system') {
-    resolvedTheme.value = resolveTheme('system')
-    applyTheme(resolvedTheme.value)
-  }
-})
-
-// Watch mode changes
-watch(mode, (newMode) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, newMode)
-  } catch {
-    // localStorage unavailable
-  }
-  resolvedTheme.value = resolveTheme(newMode)
-  applyTheme(resolvedTheme.value)
 }, { immediate: true })
 
 export function useTheme() {
@@ -62,6 +27,6 @@ export function useTheme() {
     },
     setMode(m: ThemeMode) {
       mode.value = m
-    }
+    },
   }
 }

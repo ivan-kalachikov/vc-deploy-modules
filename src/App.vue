@@ -41,8 +41,8 @@ const scrollToModule = (moduleId: string) => {
   }
 }
 
-const handleJsonSubmit = (jsonString: string, sort: boolean) => {
-  parseConfig(jsonString, sort)
+const handleJsonSubmit = (jsonString: string) => {
+  parseConfig(jsonString)
 }
 </script>
 
@@ -54,7 +54,7 @@ const handleJsonSubmit = (jsonString: string, sort: boolean) => {
     </header>
 
     <div v-if="!config" class="json-input-container">
-      <JsonInput :initial-sort="shouldSortModules" @submit="handleJsonSubmit" />
+      <JsonInput v-model:sort-modules="shouldSortModules" @submit="handleJsonSubmit" />
     </div>
 
     <template v-else>

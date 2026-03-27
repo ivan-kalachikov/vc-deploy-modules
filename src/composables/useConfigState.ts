@@ -1,32 +1,22 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
+import { useStorage } from '@vueuse/core'
 import type { ConfigurationData, ModuleType, ModuleBase } from '../types'
 
-const SORT_STORAGE_KEY = 'sort-modules-preference'
-
-function loadSortPreference(): boolean {
-  const stored = localStorage.getItem(SORT_STORAGE_KEY)
-  return stored !== null ? stored === 'true' : true
-}
+// Module-level singletons — survive across multiple useConfigState() calls
+const config = ref<ConfigurationData | null>(null)
+const originalConfig = ref<ConfigurationData | null>(null)
+const jsonError = ref('')
+const shouldSortModules = useStorage('sort-modules-preference', true)
 
 export function useConfigState() {
-  const config = ref<ConfigurationData | null>(null)
-  const originalConfig = ref<ConfigurationData | null>(null)
-  const jsonError = ref('')
-  const shouldSortModules = ref(loadSortPreference())
-
-  watch(shouldSortModules, (val) => {
-    localStorage.setItem(SORT_STORAGE_KEY, String(val))
-  })
-
-  function parseConfig(jsonString: string, sort: boolean) {
+  function parseConfig(jsonString: string) {
     try {
       const parsed = JSON.parse(jsonString)
       config.value = parsed
       originalConfig.value = structuredClone(parsed)
       jsonError.value = ''
-      shouldSortModules.value = sort
     } catch (e) {
-      jsonError.value = 'Invalid JSON format' + (e as Error).message
+      jsonError.value = 'Invalid JSON format: ' + (e as Error).message
     }
   }
 

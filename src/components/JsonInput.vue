@@ -1,21 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-const props = defineProps<{
-  initialSort?: boolean
-}>()
+const sortModules = defineModel<boolean>('sortModules', { default: true })
 
 const jsonInput = ref('')
-const sortModules = ref(props.initialSort ?? true)
 const error = ref('')
 
 const emit = defineEmits<{
-  submit: [value: string, sort: boolean]
+  submit: [value: string]
 }>()
 
 const handleSubmit = () => {
   if (!jsonInput.value.trim()) return
-  emit('submit', jsonInput.value, sortModules.value)
+  emit('submit', jsonInput.value)
 }
 
 const handleTextareaInput = (e: Event) => {
