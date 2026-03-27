@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { ModuleViewModel, ModuleType } from '../types'
-import { isValidVersion, isValidBlobName } from '../utils/validation'
 import { formatModuleId } from '../utils/helpers'
 import { getGitHubRepoUrl } from '../config/moduleRepoMapping'
 import GitHubVersionInput from './GitHubVersionInput.vue'
+import AzureBlobInput from './AzureBlobInput.vue'
 
 const props = defineProps<{
   module: ModuleViewModel
@@ -16,32 +16,9 @@ const emit = defineEmits<{
   'load-tags': [moduleId: string]
 }>()
 
-const extractPrUrl = (blobName: string): string | null => {
-  const prMatch = blobName.match(/-pr-(\d+)-/)
-  return prMatch ? `https://github.com/VirtoCommerce/vc-platform/pull/${prMatch[1]}` : null
-}
-
 const onSourceTypeChange = (e: Event) => {
   const target = e.target as HTMLSelectElement
   emit('move', props.module.id, props.sourceType, target.value as ModuleType)
-}
-
-const onAzureInput = (e: Event) => {
-  const target = e.target as HTMLInputElement
-  emit('update', props.module.id, props.sourceType, target.value)
-}
-
-const onAzureBlur = (e: Event) => {
-  const target = e.target as HTMLInputElement
-  target.value = target.value.trim()
-}
-
-const azureTitle = (value: string): string => {
-  if (value) {
-    const prUrl = extractPrUrl(value)
-    if (prUrl) return `PR: ${prUrl}`
-  }
-  return 'Format should be: version[-suffix].zip (e.g., 3.806.0-pr-62-df9c.zip)'
 }
 </script>
 
@@ -70,19 +47,10 @@ const azureTitle = (value: string): string => {
           @change="(val: string) => emit('update', module.id, sourceType, val)"
           @load-tags="emit('load-tags', module.id)"
         />
-        <input
+        <AzureBlobInput
           v-else
-          :data-module-id="module.id.trim()"
-          type="text"
-          :value="module.value"
-          placeholder="Version with suffix (e.g., 3.806.0-pr-62-df9c.zip)"
-          :title="azureTitle(module.value)"
-          :class="{
-            'error': !module.value.trim() ||
-                    (module.value.trim() && !isValidBlobName(module.value))
-          }"
-          @input="onAzureInput"
-          @blur="onAzureBlur"
+          :module="module"
+          @change="(val: string) => emit('update', module.id, sourceType, val)"
         />
       </div>
     </div>

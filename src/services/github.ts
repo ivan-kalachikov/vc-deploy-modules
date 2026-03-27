@@ -36,6 +36,26 @@ export async function fetchTags(repoName: string): Promise<string[]> {
     .sort((a: string, b: string) => b.localeCompare(a))
 }
 
+export interface PrInfo {
+  number: number
+  title: string
+}
+
+export async function fetchOpenPrs(repoName: string): Promise<PrInfo[]> {
+  const response = await fetch(
+    `https://api.github.com/repos/VirtoCommerce/${repoName}/pulls?state=open&per_page=30`,
+    { headers: getHeaders() },
+  )
+  if (!response.ok) {
+    throw new Error(`GitHub API returned ${response.status}`)
+  }
+  const prs = await response.json()
+  return prs.map((pr: { number: number; title: string }) => ({
+    number: pr.number,
+    title: pr.title,
+  }))
+}
+
 export interface ArtifactInfo {
   moduleId: string
   fileName: string
