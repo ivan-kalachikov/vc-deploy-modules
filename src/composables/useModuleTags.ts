@@ -39,6 +39,7 @@ export function useModuleTags() {
   async function updateAllToLatest(
     modules: ModuleViewModel[],
     onModuleUpdated: (moduleId: string, latestVersion: string) => void,
+    batchSize = 5,
   ): Promise<number> {
     const githubModules = modules.filter(
       (m) => m.sourceType === 'GithubReleases',
@@ -51,20 +52,22 @@ export function useModuleTags() {
     let updatedCount = 0
 
     try {
-      for (const module of githubModules) {
-        try {
-          if (updateProgress.value.current > 0) {
-            await new Promise((resolve) => setTimeout(resolve, 500))
-          }
+      for (let i = 0; i < githubModules.length; i += batchSize) {
+        const batch = githubModules.slice(i, i + batchSize)
 
-          await loadTags(module, true)
+        const results = await Promise.allSettled(
+          batch.map(async (module) => {
+            await loadTags(module, true)
+            if (module.tags?.length) {
+              onModuleUpdated(module.id, module.tags[0])
+              return true
+            }
+            return false
+          }),
+        )
 
-          if (module.tags?.length) {
-            const latestVersion = module.tags[0]
-            onModuleUpdated(module.id, latestVersion)
-            updatedCount++
-          }
-        } finally {
+        for (const result of results) {
+          if (result.status === 'fulfilled' && result.value) updatedCount++
           updateProgress.value.current++
         }
       }
