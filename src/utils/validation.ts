@@ -1,6 +1,6 @@
-// Version format: major.minor.patch (e.g., 3.809.0)
+// Version format: major.minor.patch with optional pre-release suffix (e.g., 3.809.0, 3.1009.0-pr-2987-75d0)
 export const isValidVersion = (version: string): boolean =>
-  /^\d+\.\d+\.\d+$/.test(version.trim())
+  /^\d+\.\d+\.\d+(-[\w.-]+)?$/.test(version.trim())
 
 // Manifest version format: major.minor (e.g., 2.0)
 export const isValidManifestVersion = (version: string): boolean =>

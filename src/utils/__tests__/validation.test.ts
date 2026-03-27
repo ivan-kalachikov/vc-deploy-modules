@@ -39,6 +39,13 @@ describe('isValidVersion', () => {
   it('rejects versions with extra segments', () => {
     expect(isValidVersion('1.2.3.4')).toBe(false)
   })
+
+  it('accepts versions with pre-release suffix', () => {
+    expect(isValidVersion('3.1009.0-pr-2987-75d0')).toBe(true)
+    expect(isValidVersion('3.1009.0-pr-2987-75d0-vcst-4710-75d0e')).toBe(true)
+    expect(isValidVersion('1.0.0-alpha.1')).toBe(true)
+    expect(isValidVersion('2.0.0-beta')).toBe(true)
+  })
 })
 
 describe('isValidManifestVersion', () => {
