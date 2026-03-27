@@ -139,7 +139,7 @@ const updateField = <T extends keyof ConfigurationData>(field: T, value: Configu
       <div class="config-item full-width">
         <label>Module Sources:</label>
         <textarea
-          :value="config.ModuleSources.join('\n')"
+          :value="(config.ModuleSources || []).join('\n')"
           @input="(e) => updateField('ModuleSources', (e.target as HTMLInputElement).value.split('\n').filter(s => s.trim()))"
           placeholder="One URL per line"
           rows="3"

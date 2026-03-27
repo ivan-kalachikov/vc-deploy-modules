@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useUrlSearchParams } from '@vueuse/core'
 import { useManifestHistory } from './useManifestHistory'
 import { useToast } from './useToast'
@@ -53,5 +53,10 @@ export function useManifestLoader() {
     return url || null
   }
 
-  return { isLoading, error, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl }
+  const manifestUrl = computed(() => {
+    const val = params['manifest-url']
+    return (Array.isArray(val) ? val[0] : val) || null
+  })
+
+  return { isLoading, error, manifestUrl, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl }
 }

@@ -45,22 +45,22 @@ export function useJsonGenerator() {
           },
         )
 
-      newConfig.ModuleSources = [...newConfig.ModuleSources].sort()
+      if (newConfig.ModuleSources) {
+        newConfig.ModuleSources = [...newConfig.ModuleSources].sort()
+      }
     }
 
-    return JSON.stringify(
-      {
-        ManifestVersion: newConfig.ManifestVersion,
-        PlatformVersion: newConfig.PlatformVersion,
-        PlatformImage: newConfig.PlatformImage,
-        PlatformImageTag: newConfig.PlatformImageTag,
-        PlatformAssetUrl: newConfig.PlatformAssetUrl,
-        ModuleSources: newConfig.ModuleSources,
-        Sources: newConfig.Sources,
-      },
-      null,
-      2,
-    )
+    // Build output with only fields that exist in the config
+    const output: Record<string, unknown> = {}
+    if (newConfig.ManifestVersion !== undefined) output.ManifestVersion = newConfig.ManifestVersion
+    if (newConfig.PlatformVersion !== undefined) output.PlatformVersion = newConfig.PlatformVersion
+    if (newConfig.PlatformImage !== undefined) output.PlatformImage = newConfig.PlatformImage
+    if (newConfig.PlatformImageTag !== undefined) output.PlatformImageTag = newConfig.PlatformImageTag
+    if (newConfig.PlatformAssetUrl !== undefined) output.PlatformAssetUrl = newConfig.PlatformAssetUrl
+    if (newConfig.ModuleSources !== undefined) output.ModuleSources = newConfig.ModuleSources
+    output.Sources = newConfig.Sources
+
+    return JSON.stringify(output, null, 2)
   }
 
   async function copyToClipboard(json: string): Promise<boolean> {

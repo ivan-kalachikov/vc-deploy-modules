@@ -15,7 +15,7 @@ import SkeletonLoader from './components/SkeletonLoader.vue'
 const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform, resetToOriginal } = useConfigState()
 const { generateJson } = useJsonGenerator()
 const { changes } = useDiffTracker(config, originalConfig)
-const { isLoading, error, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl } = useManifestLoader()
+const { isLoading, error, manifestUrl, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl } = useManifestLoader()
 
 const showDiff = ref(true)
 const moduleListRef = ref<InstanceType<typeof ModuleList> | null>(null)
@@ -103,6 +103,9 @@ const handleBack = () => {
 
     <!-- Config screen -->
     <template v-else>
+      <div v-if="manifestUrl" class="manifest-url-bar">
+        <a :href="manifestUrl" target="_blank" rel="noopener noreferrer">{{ manifestUrl }}</a>
+      </div>
       <div class="main-layout">
         <div class="config-column">
           <PlatformConfig ref="platformConfigRef" :config="config" @update="updatePlatform" />
@@ -191,6 +194,28 @@ h1 {
 .reset-button:hover {
   background: var(--error-bg);
   border-color: var(--error);
+}
+
+.manifest-url-bar {
+  margin-bottom: 16px;
+  padding: 8px 14px;
+  background: var(--surface-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.manifest-url-bar a {
+  color: var(--link);
+  text-decoration: none;
+  font-family: monospace;
+}
+
+.manifest-url-bar a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
 }
 
 .json-input-container {
