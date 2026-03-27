@@ -305,6 +305,7 @@ h1 {
 .popover-content :deep(.json-string) { color: var(--json-string); }
 .popover-content :deep(.json-number) { color: var(--json-number); }
 .popover-content :deep(.json-bool) { color: var(--json-bool); }
+.popover-content :deep(.json-punct) { color: var(--text-tertiary); }
 
 @keyframes highlight {
   0% { background-color: transparent; }
