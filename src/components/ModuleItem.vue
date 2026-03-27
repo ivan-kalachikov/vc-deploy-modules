@@ -15,9 +15,11 @@ const emit = defineEmits<{
   'tags-loaded': [moduleId: string, tags: string[]]
 }>()
 
-const onSourceTypeChange = (e: Event) => {
-  const target = e.target as HTMLSelectElement
-  emit('move', props.module.id, props.sourceType, target.value as ModuleType)
+const isGitHub = () => props.sourceType === 'GithubReleases'
+
+const toggleSource = () => {
+  const to: ModuleType = isGitHub() ? 'AzureBlob' : 'GithubReleases'
+  emit('move', props.module.id, props.sourceType, to)
 }
 </script>
 
@@ -35,10 +37,14 @@ const onSourceTypeChange = (e: Event) => {
       </a>
     </div>
     <div class="module-controls">
-      <select :value="sourceType" @change="onSourceTypeChange">
-        <option value="GithubReleases">GitHub Releases</option>
-        <option value="AzureBlob">Azure Blob</option>
-      </select>
+      <button
+        class="source-toggle"
+        :class="{ github: isGitHub() }"
+        :title="isGitHub() ? 'Switch to Azure Blob' : 'Switch to GitHub Releases'"
+        @click="toggleSource"
+      >
+        <span class="toggle-label">{{ isGitHub() ? 'GH' : 'Az' }}</span>
+      </button>
       <div class="input-container">
         <VersionCombobox
           :module="module"
@@ -93,30 +99,33 @@ const onSourceTypeChange = (e: Event) => {
   min-width: 0;
 }
 
-.module-controls select {
-  width: 37%;
-  padding: 8px 28px 8px 12px;
-  appearance: none;
+.source-toggle {
+  padding: 4px 8px;
   border: 1px solid var(--border-secondary);
   border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-family: monospace;
-  background: var(--surface-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E") no-repeat right 8px center;
+  background: var(--surface-tertiary);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  min-width: 32px;
+  text-align: center;
+}
+
+.source-toggle.github {
+  background: var(--surface-card);
   color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+.source-toggle:hover {
+  border-color: var(--border-focus);
 }
 
 .input-container {
   flex: 1;
   min-width: 0;
-}
-
-.module-controls select:focus {
-  outline: none;
-  border-color: var(--border-focus);
-  box-shadow: 0 0 0 2px var(--border-focus-shadow);
-}
-
-.module-controls select {
-  cursor: pointer;
 }
 </style>
