@@ -4,16 +4,27 @@ import { useTheme } from '../composables/useTheme'
 
 const { resolvedTheme, toggle } = useTheme()
 const isHovered = ref(false)
+const btnRef = ref<HTMLElement>()
+
+const isPopping = ref(false)
+
+function handleClick(e: MouseEvent) {
+  toggle(e)
+  isHovered.value = false
+  isPopping.value = true
+  setTimeout(() => { isPopping.value = false }, 800)
+}
 </script>
 
 <template>
   <button
+    ref="btnRef"
     class="theme-toggle"
-    :class="[resolvedTheme, { hovered: isHovered }]"
+    :class="[resolvedTheme, { hovered: isHovered, popping: isPopping }]"
     :title="resolvedTheme === 'light' ? 'Switch to dark' : 'Switch to light'"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
-    @click="toggle($event); isHovered = false"
+    @click="handleClick($event)"
   >
     <span class="icon current">{{ resolvedTheme === 'light' ? '☀️' : '🌙' }}</span>
     <span class="icon next">{{ resolvedTheme === 'light' ? '🌙' : '☀️' }}</span>
@@ -29,9 +40,31 @@ const isHovered = ref(false)
   font-size: 24px;
   cursor: pointer;
   line-height: 1;
-  width: 32px;
-  height: 32px;
-  overflow: hidden;
+  width: 40px;
+  height: 40px;
+  overflow: visible;
+}
+
+.popping {
+  animation: pop-bounce 0.8s ease-out;
+}
+
+.light.popping {
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.9));
+}
+
+.dark.popping {
+  filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.9));
+}
+
+@keyframes pop-bounce {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.6) rotate(10deg); }
+  30% { transform: scale(1.3) rotate(-8deg); }
+  45% { transform: scale(1.45) rotate(5deg); }
+  60% { transform: scale(1.2) rotate(-3deg); }
+  75% { transform: scale(1.1) rotate(1deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
 .icon {
