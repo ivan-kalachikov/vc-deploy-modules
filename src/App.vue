@@ -306,6 +306,8 @@ h1 {
 
 .copy-button {
   padding: 6px 12px;
+  min-width: 90px;
+  text-align: center;
   background: var(--primary);
   color: var(--text-on-primary);
   border: none;
