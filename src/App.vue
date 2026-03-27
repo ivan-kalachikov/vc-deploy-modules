@@ -65,10 +65,15 @@ async function handleHistoryClick(url: string) {
   if (text) parseConfig(text)
 }
 const showScrollTop = ref(false)
-const onScroll = () => { showScrollTop.value = window.scrollY > 300 }
+const showScrollBottom = ref(false)
+const onScroll = () => {
+  showScrollTop.value = window.scrollY > 300
+  showScrollBottom.value = window.scrollY + window.innerHeight < document.body.scrollHeight - 300
+}
 onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
 onUnmounted(() => window.removeEventListener('scroll', onScroll))
 const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+const scrollToBottom = () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
 
 const handleBack = () => {
   config.value = null
@@ -143,7 +148,10 @@ const handleCopy = async () => {
       </div>
     </div>
 
-    <button v-if="showScrollTop" class="scroll-top" @click="scrollToTop" title="Scroll to top">&uarr;</button>
+    <div class="scroll-buttons">
+      <button v-if="showScrollTop" class="scroll-btn" @click="scrollToTop" title="Scroll to top">&uarr;</button>
+      <button v-if="showScrollBottom" class="scroll-btn" @click="scrollToBottom" title="Scroll to bottom">&darr;</button>
+    </div>
     <ToastContainer />
   </div>
 </template>
@@ -375,10 +383,17 @@ h1 {
   animation: highlight 2s ease-in-out;
 }
 
-.scroll-top {
+.scroll-buttons {
   position: fixed;
   bottom: 24px;
   right: calc(50% - 660px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 50;
+}
+
+.scroll-btn {
   padding: 8px 12px;
   background: var(--surface-secondary);
   border: 1px solid var(--border-primary);
@@ -388,16 +403,15 @@ h1 {
   line-height: 1;
   cursor: pointer;
   transition: all var(--transition-fast);
-  z-index: 50;
 }
 
-.scroll-top:hover {
+.scroll-btn:hover {
   background: var(--surface-tertiary);
   color: var(--text-primary);
 }
 
 @media (max-width: 1380px) {
-  .scroll-top {
+  .scroll-buttons {
     right: 12px;
   }
 }
