@@ -24,7 +24,7 @@ const sectionTitle = (type: ModuleType): string =>
         <h2>{{ sectionTitle(sourceType) }}</h2>
         <slot name="header-actions" />
       </div>
-      <div class="modules">
+      <div v-if="modules.length" class="modules">
         <ModuleItem
           v-for="module in modules"
           :key="module.id + '-' + module.sourceType"
