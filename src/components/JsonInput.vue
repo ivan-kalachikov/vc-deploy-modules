@@ -72,6 +72,8 @@ const handleUrlSubmit = () => fetchAndSubmit(jsonUrl.value)
 
 function handleHistoryClick(url: string) {
   touchEntry(url)
+  jsonUrl.value = url
+  params['manifest-url'] = url
   fetchAndSubmit(url)
 }
 
