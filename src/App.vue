@@ -80,6 +80,7 @@ const handleCopy = async () => {
     <header class="app-header">
       <div class="header-left">
         <button v-if="config" class="back-button" @click="handleBack">Back</button>
+        <img src="./assets/logo.png" alt="" class="app-logo" />
         <h1>Module Configuration Manager</h1>
       </div>
       <div class="header-right">
@@ -160,6 +161,11 @@ const handleCopy = async () => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.app-logo {
+  width: 36px;
+  height: 36px;
 }
 
 h1 {
