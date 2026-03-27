@@ -14,13 +14,12 @@ const error = ref('')
 const { history, addEntry, removeEntry, touchEntry } = useManifestHistory()
 const { addToast } = useToast()
 
-// Check URL param synchronously — start fetch before first render
+// Read URL param synchronously for loading state
 const initialUrlParam = params['manifest-url']
 const initialUrl = Array.isArray(initialUrlParam) ? initialUrlParam[0] : initialUrlParam
 if (initialUrl) {
   jsonUrl.value = initialUrl
   isLoading.value = true
-  fetchAndSubmit(initialUrl)
 }
 
 const emit = defineEmits<{
@@ -74,6 +73,11 @@ const handleUrlSubmit = () => fetchAndSubmit(jsonUrl.value)
 function handleHistoryClick(url: string) {
   touchEntry(url)
   fetchAndSubmit(url)
+}
+
+// Auto-fetch from URL param (must be after fetchAndSubmit is defined)
+if (initialUrl) {
+  fetchAndSubmit(initialUrl)
 }
 </script>
 
