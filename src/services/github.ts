@@ -17,25 +17,39 @@ function getHeaders(): Record<string, string> {
   }
 }
 
-function parseRateLimitWait(response: Response): number {
-  const retryAfter = response.headers.get('retry-after')
-  if (retryAfter) return parseInt(retryAfter)
+function parseIntSafe(value: string | null): number | null {
+  if (!value) return null
+  const n = parseInt(value, 10)
+  return Number.isNaN(n) ? null : n
+}
 
-  const resetEpoch = response.headers.get('x-ratelimit-reset')
+function isRateLimited(response: Response): boolean {
+  if (response.status === 429) return true
+  if (response.status === 403) {
+    const remaining = parseIntSafe(response.headers.get('x-ratelimit-remaining'))
+    return remaining === 0
+  }
+  return false
+}
+
+function parseRateLimitWait(response: Response): number {
+  const retryAfter = parseIntSafe(response.headers.get('retry-after'))
+  if (retryAfter && retryAfter > 0) return retryAfter
+
+  const resetEpoch = parseIntSafe(response.headers.get('x-ratelimit-reset'))
   if (resetEpoch) {
-    const wait = parseInt(resetEpoch) - Math.floor(Date.now() / 1000)
+    const wait = resetEpoch - Math.floor(Date.now() / 1000)
     return Math.max(wait, 1)
   }
 
   return 60
 }
 
-// Track remaining requests from last response
 let rateLimitRemaining: number | null = null
 
 function updateRateLimit(response: Response) {
-  const remaining = response.headers.get('x-ratelimit-remaining')
-  if (remaining !== null) rateLimitRemaining = parseInt(remaining)
+  const remaining = parseIntSafe(response.headers.get('x-ratelimit-remaining'))
+  if (remaining !== null) rateLimitRemaining = remaining
 }
 
 export function getRateLimitRemaining(): number | null {
@@ -44,35 +58,27 @@ export function getRateLimitRemaining(): number | null {
 
 async function githubFetch(url: string): Promise<Response> {
   const response = await fetch(url, { headers: getHeaders() })
-  updateRateLimit(response)
 
-  if (response.status === 403 || response.status === 429) {
+  if (isRateLimited(response)) {
+    rateLimitRemaining = 0
     throw new RateLimitError(parseRateLimitWait(response))
   }
 
+  updateRateLimit(response)
   return response
 }
 
 export async function fetchTags(repoName: string): Promise<string[]> {
-  let allTags: Array<{ name: string }> = []
-  let page = 1
-  let hasNext = true
-
-  while (hasNext) {
-    const response = await githubFetch(
-      `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100&page=${page}`,
-    )
-    if (!response.ok) {
-      throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
-    }
-
-    const pageTags = await response.json()
-    allTags = [...allTags, ...pageTags]
-    hasNext = pageTags.length === 100
-    page++
+  // Single page fetch — first 100 tags is enough for version selection
+  const response = await githubFetch(
+    `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100`,
+  )
+  if (!response.ok) {
+    throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
   }
 
-  return allTags
+  const tags = await response.json()
+  return tags
     .map((tag: { name: string }) => tag.name.replace(/^v/, ''))
     .filter((tag: string) => isValidVersion(tag))
     .sort((a: string, b: string) => b.localeCompare(a))
