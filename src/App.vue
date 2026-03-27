@@ -80,9 +80,15 @@ const handleBack = () => {
   originalConfig.value = null
   clearManifestUrl()
 }
+const copyState = ref<'idle' | 'success'>('idle')
 const handleCopy = async () => {
   const ok = await copyToClipboard(json.value)
-  addToast(ok ? 'JSON copied to clipboard' : 'Failed to copy', ok ? 'success' : 'error')
+  if (ok) {
+    copyState.value = 'success'
+    setTimeout(() => { copyState.value = 'idle' }, 1500)
+  } else {
+    addToast('Failed to copy', 'error')
+  }
 }
 </script>
 
@@ -126,7 +132,9 @@ const handleCopy = async () => {
             <button class="action-button" popovertarget="json-preview">Preview</button>
             <button class="reset-button" :disabled="!changes.length" @click="resetToOriginal">Reset</button>
             <span class="spacer"></span>
-            <button class="copy-button" @click="handleCopy">Copy JSON</button>
+            <button class="copy-button" :class="{ copied: copyState === 'success' }" @click="handleCopy">
+              {{ copyState === 'success' ? 'Copied!' : 'Copy JSON' }}
+            </button>
           </div>
           <button
             v-if="hasInvalidInputs"
@@ -161,7 +169,7 @@ const handleCopy = async () => {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 20px 12px;
   box-sizing: border-box;
   container-type: inline-size;
 }
@@ -310,6 +318,17 @@ h1 {
 
 .copy-button:hover {
   background: var(--primary-hover);
+}
+
+.copy-button.copied {
+  background: var(--success);
+  animation: copy-pop 0.3s ease;
+}
+
+@keyframes copy-pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }
 
 .sidebar-error {
