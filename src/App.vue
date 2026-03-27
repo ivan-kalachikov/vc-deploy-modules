@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useUrlSearchParams } from '@vueuse/core'
 import { useConfigState } from './composables/useConfigState'
 import { useJsonGenerator } from './composables/useJsonGenerator'
 import { useDiffTracker } from './composables/useDiffTracker'
@@ -10,6 +11,7 @@ import JsonOutput from './components/JsonOutput.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import ToastContainer from './components/ToastContainer.vue'
 
+const params = useUrlSearchParams('history')
 const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform } = useConfigState()
 const { generateJson } = useJsonGenerator()
 const { changes } = useDiffTracker(config, originalConfig)
@@ -48,6 +50,7 @@ const handleJsonSubmit = (jsonString: string) => {
 const handleBack = () => {
   config.value = null
   originalConfig.value = null
+  delete params['manifest-url']
 }
 </script>
 

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useUrlSearchParams } from '@vueuse/core'
 import { useManifestHistory } from '../composables/useManifestHistory'
 import { useToast } from '../composables/useToast'
 
 const sortModules = defineModel<boolean>('sortModules', { default: true })
 
+const params = useUrlSearchParams('history')
 const jsonInput = ref('')
 const jsonUrl = ref('')
 const isLoading = ref(false)
@@ -12,13 +14,13 @@ const error = ref('')
 const { history, addEntry, removeEntry, touchEntry } = useManifestHistory()
 const { addToast } = useToast()
 
-// Read manifest-url from query params on mount
+// Auto-fetch from manifest-url query param on mount
 onMounted(() => {
-  const params = new URLSearchParams(window.location.search)
-  const urlParam = params.get('manifest-url')
-  if (urlParam) {
-    jsonUrl.value = urlParam
-    fetchAndSubmit(urlParam)
+  const urlParam = params['manifest-url']
+  const url = Array.isArray(urlParam) ? urlParam[0] : urlParam
+  if (url) {
+    jsonUrl.value = url
+    fetchAndSubmit(url)
   }
 })
 
@@ -59,10 +61,7 @@ async function fetchAndSubmit(url: string) {
     const text = await response.text()
     JSON.parse(text) // validate
     addEntry(trimmed) // store original URL, not raw
-    // Update browser URL with manifest-url param
-    const url = new URL(window.location.href)
-    url.searchParams.set('manifest-url', trimmed)
-    window.history.replaceState({}, '', url.toString())
+    params['manifest-url'] = trimmed
     emit('submit', text)
   } catch (e) {
     error.value = `Failed to fetch: ${(e as Error).message}`
