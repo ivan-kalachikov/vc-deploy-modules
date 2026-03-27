@@ -151,7 +151,7 @@ const handleCopy = async () => {
 <style scoped>
 .app {
   width: 100%;
-  max-width: 1800px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
@@ -378,7 +378,7 @@ h1 {
 .scroll-top {
   position: fixed;
   bottom: 24px;
-  right: calc(50% - 920px);
+  right: calc(50% - 660px);
   padding: 8px 12px;
   background: var(--surface-secondary);
   border: 1px solid var(--border-primary);
@@ -396,7 +396,7 @@ h1 {
   color: var(--text-primary);
 }
 
-@media (max-width: 1900px) {
+@media (max-width: 1380px) {
   .scroll-top {
     right: 12px;
   }
