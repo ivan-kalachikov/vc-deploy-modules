@@ -98,7 +98,7 @@ function handleHistoryClick(url: string) {
     <div v-if="error" class="error">{{ error }}</div>
 
     <!-- Textarea -->
-    <h2>Or paste JSON</h2>
+    <h2 class="paste-heading">Or paste JSON</h2>
     <textarea
       :value="jsonInput"
       rows="20"
@@ -129,7 +129,7 @@ h2 {
   font-weight: 600;
 }
 
-h2 + h2, .history + h2 {
+.paste-heading {
   margin-top: 24px;
 }
 
