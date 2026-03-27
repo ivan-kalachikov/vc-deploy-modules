@@ -87,12 +87,15 @@ const moveModule = async (moduleId: string, fromType: ModuleType, toType: Module
 
   if (toType === 'GithubReleases') {
     loadCachedTags(newModule)
-    loadTags(newModule, true)
+    await loadTags(newModule, true)
+    if (newModule.tags?.length) {
+      newModule.value = newModule.tags[0]
+    }
   }
 
   modules.value.push(newModule)
   emit('module-update', moduleId, fromType, '__DELETE__')
-  emit('module-update', moduleId, toType, '')
+  emit('module-update', moduleId, toType, newModule.value)
 }
 
 // Update all GitHub modules to latest
