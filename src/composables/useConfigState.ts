@@ -33,7 +33,7 @@ export function useConfigState() {
     const moduleIndex = source.Modules.findIndex((m: ModuleBase) =>
       type === 'GithubReleases'
         ? m.Id === moduleId
-        : m.BlobName?.startsWith(moduleId),
+        : m.BlobName?.startsWith(moduleId + '_'),
     )
 
     if (value === '__DELETE__') {

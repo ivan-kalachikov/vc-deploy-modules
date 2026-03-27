@@ -43,7 +43,7 @@ export function useDiffTracker(
           const found = origSource.Modules.find((m) =>
             origSource.Name === 'GithubReleases'
               ? m.Id === moduleId
-              : m.BlobName?.startsWith(moduleId),
+              : m.BlobName?.startsWith(moduleId + '_'),
           )
           if (found) {
             originalModule = found
