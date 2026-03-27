@@ -26,7 +26,8 @@ export function useModuleTags() {
       const tags = await fetchTags(repoName)
       setCachedTags(module.id, tags)
       module.tags = tags
-    } catch {
+    } catch (e) {
+      if (e instanceof RateLimitError) throw e
       module.tags = undefined
     } finally {
       module.isLoadingTags = false
