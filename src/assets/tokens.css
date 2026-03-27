@@ -146,6 +146,30 @@ html[data-theme="dark"] {
   --scrollbar-thumb-hover: #606060;
 }
 
+/* ===== Scrollbars ===== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
 /* ===== Body Defaults ===== */
 body {
   min-height: 100vh;
@@ -172,4 +196,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* #app layout handled by .app in App.vue */
+/* ===== Theme View Transition ===== */
+::view-transition-old(root) {
+  animation: none;
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  animation: none;
+  z-index: 2;
+  /* mask is driven by JS animation */
+}

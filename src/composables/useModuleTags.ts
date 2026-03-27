@@ -68,7 +68,8 @@ export function useModuleTags() {
         const remaining = getRateLimitRemaining()
         if (remaining !== null && remaining < batchSize) {
           updateProgress.value.status = `API quota exhausted`
-          addToast(`GitHub API limit reached (60 req/hour). ${updatedCount} modules updated. Resets in up to 1 hour.`, 'error')
+          const hint = getRateLimitRemaining() === 0 ? ' Set a GitHub token for 5000 req/hour.' : ''
+          addToast(`GitHub API limit reached. ${updatedCount} modules updated.${hint}`, 'error')
           break
         }
 
