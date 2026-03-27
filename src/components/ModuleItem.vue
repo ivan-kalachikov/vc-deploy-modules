@@ -101,7 +101,7 @@ const onSourceTypeChange = (e: Event) => {
 
 .module-controls select {
   width: 37%;
-  padding: 8px 12px;
+  padding: 8px 24px 8px 12px;
   border: 1px solid var(--border-secondary);
   border-radius: var(--radius-sm);
   font-size: 14px;
