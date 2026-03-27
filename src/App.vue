@@ -10,6 +10,7 @@ import PlatformConfig from './components/PlatformConfig.vue'
 import JsonOutput from './components/JsonOutput.vue'
 import DiffPreview from './components/DiffPreview.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
+import GitHubTokenSetting from './components/GitHubTokenSetting.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import SkeletonLoader from './components/SkeletonLoader.vue'
 import { useToast } from './composables/useToast'
@@ -80,12 +81,15 @@ const handleBack = () => {
   originalConfig.value = null
   clearManifestUrl()
 }
-const copyState = ref<'idle' | 'success'>('idle')
+const copyState = ref<'idle' | 'success' | 'shake'>('idle')
 const handleCopy = async () => {
   const ok = await copyToClipboard(json.value)
   if (ok) {
     copyState.value = 'success'
-    setTimeout(() => { copyState.value = 'idle' }, 1500)
+    setTimeout(() => {
+      copyState.value = 'shake'
+      setTimeout(() => { copyState.value = 'idle' }, 500)
+    }, 1200)
   } else {
     addToast('Failed to copy', 'error')
   }
@@ -101,6 +105,7 @@ const handleCopy = async () => {
         <h1>Module Configuration Manager</h1>
       </div>
       <div class="header-right">
+        <GitHubTokenSetting />
         <ThemeToggle />
       </div>
     </header>
@@ -132,7 +137,7 @@ const handleCopy = async () => {
             <button class="action-button" popovertarget="json-preview">Preview</button>
             <button class="reset-button" :disabled="!changes.length" @click="resetToOriginal">Reset</button>
             <span class="spacer"></span>
-            <button class="copy-button" :class="{ copied: copyState === 'success' }" @click="handleCopy">
+            <button class="copy-button" :class="{ copied: copyState === 'success', shake: copyState === 'shake' }" @click="handleCopy">
               {{ copyState === 'success' ? 'Copied!' : 'Copy JSON' }}
             </button>
           </div>
@@ -298,6 +303,8 @@ h1 {
   display: flex;
   gap: 8px;
   align-items: center;
+  overflow: clip;
+  padding: 4px 0;
 }
 
 .sidebar-actions .spacer {
@@ -324,13 +331,29 @@ h1 {
 
 .copy-button.copied {
   background: var(--success);
-  animation: copy-pop 0.3s ease;
+  animation: copy-pop 0.6s ease;
 }
 
 @keyframes copy-pop {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  0% { transform: translateY(0); box-shadow: 0 0 0 0 var(--success); }
+  20% { transform: translateY(-4px); box-shadow: 0 0 0 4px var(--success); }
+  40% { transform: translateY(2px); box-shadow: 0 0 0 8px transparent; }
+  55% { transform: translateY(-1px); }
+  70% { transform: translateY(1px); }
+  100% { transform: translateY(0); box-shadow: none; }
+}
+
+.copy-button.shake {
+  animation: copy-shake 0.4s ease;
+}
+
+@keyframes copy-shake {
+  0%, 100% { transform: translate(0, 0) rotate(0); }
+  15% { transform: translate(-2px, 1px) rotate(-2deg); }
+  30% { transform: translate(2px, -1px) rotate(2deg); }
+  45% { transform: translate(-1px, 0) rotate(-1deg); }
+  60% { transform: translate(1px, 1px) rotate(1deg); }
+  80% { transform: translate(-1px, 0) rotate(-0.5deg); }
 }
 
 .sidebar-error {

@@ -7,12 +7,26 @@ export class RateLimitError extends Error {
   }
 }
 
-const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN as string | undefined
+export function getGitHubToken(): string | null {
+  try {
+    return localStorage.getItem('github-token') || null
+  } catch {
+    return null
+  }
+}
+
+export function setGitHubToken(token: string | null) {
+  try {
+    if (token) localStorage.setItem('github-token', token)
+    else localStorage.removeItem('github-token')
+  } catch { /* ignore */ }
+}
 
 function getHeaders(): Record<string, string> {
-  if (!GITHUB_TOKEN) return {}
+  const token = getGitHubToken()
+  if (!token) return {}
   return {
-    'Authorization': `token ${GITHUB_TOKEN}`,
+    'Authorization': `token ${token}`,
     'Accept': 'application/vnd.github.v3+json',
   }
 }
