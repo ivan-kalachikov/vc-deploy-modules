@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useManifestHistory } from '../composables/useManifestHistory'
+import { highlightJson } from '../utils/jsonHighlight'
 
 const sortModules = defineModel<boolean>('sortModules', { default: true })
 
@@ -19,8 +20,19 @@ const jsonInput = ref('')
 const jsonUrl = ref('')
 const { history, removeEntry } = useManifestHistory()
 
+const highlighted = computed(() => highlightJson(jsonInput.value))
+const editorRef = ref<HTMLTextAreaElement>()
+const backdropRef = ref<HTMLPreElement>()
+
 const handleTextareaInput = (e: Event) => {
   jsonInput.value = (e.target as HTMLTextAreaElement).value
+}
+
+const syncScroll = () => {
+  if (editorRef.value && backdropRef.value) {
+    backdropRef.value.scrollTop = editorRef.value.scrollTop
+    backdropRef.value.scrollLeft = editorRef.value.scrollLeft
+  }
 }
 </script>
 
@@ -55,12 +67,18 @@ const handleTextareaInput = (e: Event) => {
     <div v-if="error" class="error">{{ error }}</div>
 
     <h2 class="paste-heading">Or paste JSON</h2>
-    <textarea
-      :value="jsonInput"
-      rows="20"
-      placeholder="Paste your JSON here..."
-      @input="handleTextareaInput"
-    />
+    <div class="editor-wrap">
+      <pre ref="backdropRef" class="editor-backdrop" aria-hidden="true" v-html="highlighted + '\n'"></pre>
+      <textarea
+        ref="editorRef"
+        :value="jsonInput"
+        rows="20"
+        placeholder="Paste your JSON here..."
+        spellcheck="false"
+        @input="handleTextareaInput"
+        @scroll="syncScroll"
+      />
+    </div>
     <div class="input-controls">
       <button type="button" @click="jsonInput.trim() && emit('submit', jsonInput)">Load Configuration</button>
       <label class="sort-checkbox">
@@ -180,20 +198,57 @@ h2 {
   color: var(--error-text);
 }
 
-.json-input textarea {
-  width: 100%;
+.editor-wrap {
+  position: relative;
   margin-bottom: 10px;
-  padding: 20px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-secondary);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+
+.editor-wrap:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--border-focus-shadow);
+}
+
+.editor-backdrop,
+.editor-wrap textarea {
+  padding: 20px;
   font-family: monospace;
   font-size: 14px;
   line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  margin: 0;
+  width: 100%;
   min-height: 300px;
   box-sizing: border-box;
-  text-align: left;
-  background: var(--surface-card);
+}
+
+.editor-backdrop {
   color: var(--text-primary);
+  pointer-events: none;
+}
+
+.editor-backdrop :deep(.json-key) { color: var(--json-key); }
+.editor-backdrop :deep(.json-string) { color: var(--json-string); }
+.editor-backdrop :deep(.json-number) { color: var(--json-number); }
+.editor-backdrop :deep(.json-bool) { color: var(--json-bool); }
+.editor-backdrop :deep(.json-punct) { color: var(--text-tertiary); }
+
+.editor-wrap textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  resize: none;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text-primary);
+  border: none;
+  outline: none;
 }
 
 .error {
