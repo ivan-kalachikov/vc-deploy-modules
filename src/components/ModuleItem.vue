@@ -74,6 +74,7 @@ const isChanged = () =>
   background: var(--surface-card);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-primary);
+  container-type: inline-size;
 }
 
 .module-info {
@@ -143,5 +144,26 @@ const isChanged = () =>
 
 .revert-button:hover {
   background: var(--error-bg);
+}
+
+@container (max-width: 500px) {
+  .module-item {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+  }
+
+  .module-info {
+    width: 100%;
+  }
+
+  .module-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .input-container {
+    flex-basis: 100%;
+  }
 }
 </style>
