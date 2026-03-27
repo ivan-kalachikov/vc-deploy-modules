@@ -199,8 +199,8 @@ describe('useDiffTracker', () => {
       type: 'module',
       moduleId: 'VirtoCommerce.Orders',
       action: 'changed',
-      oldValue: 'VirtoCommerce.Orders_3.800.0.zip',
-      newValue: 'VirtoCommerce.Orders_3.900.0.zip',
+      oldValue: '3.800.0.zip',
+      newValue: '3.900.0.zip',
     })
   })
 })
