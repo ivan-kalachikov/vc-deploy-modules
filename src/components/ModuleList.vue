@@ -194,6 +194,26 @@ const handleDelete = (moduleId: string, type: ModuleType) => {
   emit('module-update', moduleId, type, '__DELETE__')
 }
 
+// Add a new module
+const handleAdd = async (moduleId: string, type: ModuleType) => {
+  const newModule: ModuleViewModel = { id: moduleId, value: '', sourceType: type }
+
+  if (type === 'GithubReleases') {
+    loadCachedTags(newModule)
+    await loadTags(newModule, true)
+    if (newModule.tags?.length) {
+      newModule.value = newModule.tags[0]
+    }
+  }
+
+  modules.value.push(newModule)
+
+  const fullValue = type === 'GithubReleases'
+    ? newModule.value
+    : `${moduleId}_${newModule.value}`
+  emit('module-update', moduleId, type, fullValue)
+}
+
 // Update all GitHub modules to latest
 const handleUpdateAll = async () => {
   const count = await updateAllToLatest(modules.value, (moduleId, latestVersion) => {
@@ -263,6 +283,7 @@ defineExpose({ hasInvalidInputs, invalidCount, scrollToFirstInvalidInput, handle
       @module-move="moveModule"
       @module-revert="handleRevert"
       @module-delete="handleDelete"
+      @module-add="handleAdd"
       @tags-loaded="handleTagsLoaded"
     />
 
@@ -274,6 +295,7 @@ defineExpose({ hasInvalidInputs, invalidCount, scrollToFirstInvalidInput, handle
       @module-move="moveModule"
       @module-revert="handleRevert"
       @module-delete="handleDelete"
+      @module-add="handleAdd"
       @tags-loaded="handleTagsLoaded"
     >
       <template #header-actions>
