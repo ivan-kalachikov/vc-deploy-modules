@@ -60,6 +60,11 @@ export function useConfigState() {
     config.value = newConfig
   }
 
+  function resetToOriginal() {
+    if (!originalConfig.value) return
+    config.value = JSON.parse(JSON.stringify(toRaw(originalConfig.value)))
+  }
+
   return {
     config,
     originalConfig,
@@ -68,5 +73,6 @@ export function useConfigState() {
     parseConfig,
     updateModule,
     updatePlatform,
+    resetToOriginal,
   }
 }

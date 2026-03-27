@@ -12,7 +12,7 @@ import ThemeToggle from './components/ThemeToggle.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import SkeletonLoader from './components/SkeletonLoader.vue'
 
-const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform } = useConfigState()
+const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform, resetToOriginal } = useConfigState()
 const { generateJson } = useJsonGenerator()
 const { changes } = useDiffTracker(config, originalConfig)
 const { isLoading, error, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl } = useManifestLoader()
@@ -80,7 +80,10 @@ const handleBack = () => {
         <button v-if="config" class="back-button" @click="handleBack" title="Back to input">&larr;</button>
         <h1>Module Configuration Manager</h1>
       </div>
-      <ThemeToggle />
+      <div class="header-right">
+        <button v-if="config" class="reset-button" @click="resetToOriginal" title="Discard all changes">Reset</button>
+        <ThemeToggle />
+      </div>
     </header>
 
     <!-- Loading from URL param -->
@@ -166,6 +169,28 @@ h1 {
 .back-button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: var(--border-secondary);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reset-button {
+  padding: 4px 12px;
+  background: none;
+  border: 1px solid var(--error-border);
+  border-radius: var(--radius-sm);
+  color: var(--error-text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.reset-button:hover {
+  background: var(--error-bg);
+  border-color: var(--error);
 }
 
 .json-input-container {

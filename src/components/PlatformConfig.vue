@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import type { ConfigurationData } from '../types'
 import { isValidVersion, isValidManifestVersion, isValidPlatformImage } from '../utils/validation'
 
@@ -21,7 +21,9 @@ const hasInvalidInputs = computed(() => {
 })
 
 // Method to scroll to first invalid input
-const scrollToFirstInvalidInput = () => {
+const scrollToFirstInvalidInput = async () => {
+  isExpanded.value = true
+  await nextTick()
   const firstInvalidInput = document.querySelector('.platform-config .error') as HTMLElement
   if (firstInvalidInput) {
     firstInvalidInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
