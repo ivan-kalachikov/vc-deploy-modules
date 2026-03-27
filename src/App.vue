@@ -12,12 +12,13 @@ import DiffPreview from './components/DiffPreview.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import SkeletonLoader from './components/SkeletonLoader.vue'
+import { useToast } from './composables/useToast'
 
 const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform, resetToOriginal } = useConfigState()
 const { generateJson, copyToClipboard } = useJsonGenerator()
 const { changes } = useDiffTracker(config, originalConfig)
 const { isLoading, error, manifestUrl, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl } = useManifestLoader()
-const { addToast } = (await import('./composables/useToast')).useToast()
+const { addToast } = useToast()
 
 const moduleListRef = ref<InstanceType<typeof ModuleList> | null>(null)
 const platformConfigRef = ref<InstanceType<typeof PlatformConfig> | null>(null)
