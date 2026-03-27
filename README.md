@@ -1,17 +1,11 @@
-[![Deploy](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml/badge.svg)](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml)
-[![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)]()
+# <img src="src/assets/logo.png" width="32" align="top"> Module Configuration Manager
 
-![Logo](src/assets/logo.png)
-
-# Module Configuration Manager
+[![Deploy](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml/badge.svg)](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml) [![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)]()
 
 Web GUI for editing VirtoCommerce deployment manifests (`packages.json`).
-
 Load a manifest from URL or paste it, edit module versions and sources visually, copy the result.
 
-**Live:** [ivan-kalachikov.github.io/vc-deploy-modules](https://ivan-kalachikov.github.io/vc-deploy-modules/)
-
-**Quick link with manifest:** [open with vcst-dev manifest](https://ivan-kalachikov.github.io/vc-deploy-modules/?manifest-url=https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json)
+[**Open app**](https://ivan-kalachikov.github.io/vc-deploy-modules/) | [**Open with vcst-dev manifest**](https://ivan-kalachikov.github.io/vc-deploy-modules/?manifest-url=https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json)
 
 ---
 
