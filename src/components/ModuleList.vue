@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import type { ConfigurationData, ModuleType, ModuleViewModel } from '../types'
 import { isValidVersion, isValidBlobName } from '../utils/validation'
 import { useModuleTags } from '../composables/useModuleTags'
@@ -144,9 +144,22 @@ const moveModule = async (moduleId: string, fromType: ModuleType, toType: Module
     }
   }
 
+  // Preserve original state from the removed module
+  const removed = modules.value.find(m => m.id === moduleId && m.sourceType === fromType)
+  if (removed) {
+    newModule.originalValue = removed.originalValue
+    newModule.originalSourceType = removed.originalSourceType
+  }
+
   modules.value.push(newModule)
+
+  // Delete then add in sequence, awaiting reactivity between
   emit('module-update', moduleId, fromType, '__DELETE__')
-  emit('module-update', moduleId, toType, newModule.value)
+  await nextTick()
+  const fullValue = toType === 'GithubReleases'
+    ? newModule.value
+    : `${moduleId}_${newModule.value}`
+  emit('module-update', moduleId, toType, fullValue)
 }
 
 // Update all GitHub modules to latest
