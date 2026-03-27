@@ -52,7 +52,7 @@ const sectionTitle = (type: ModuleType): string =>
 
 .section-container h2 {
   color: var(--text-primary);
-  margin-bottom: 20px;
+  margin: 0;
   font-weight: 600;
 }
 
