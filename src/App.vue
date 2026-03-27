@@ -81,7 +81,15 @@ const handleBack = () => {
         <h1>Module Configuration Manager</h1>
       </div>
       <div class="header-right">
-        <button v-if="config" class="reset-button" @click="resetToOriginal" title="Discard all changes">Reset</button>
+        <template v-if="config">
+          <button
+            v-if="hasInvalidInputs"
+            class="action-button error-button"
+            @click="scrollToFirstInvalidInput"
+          >Errors</button>
+          <button class="action-button" popovertarget="json-preview">Preview</button>
+          <button class="reset-button" @click="resetToOriginal">Reset</button>
+        </template>
         <ThemeToggle />
       </div>
     </header>
@@ -106,24 +114,24 @@ const handleBack = () => {
       <div v-if="manifestUrl" class="manifest-url-bar">
         <a :href="manifestUrl" target="_blank" rel="noopener noreferrer">{{ manifestUrl }}</a>
       </div>
-      <div class="main-layout">
-        <div class="config-column">
-          <PlatformConfig ref="platformConfigRef" :config="config" @update="updatePlatform" />
-          <ModuleList ref="moduleListRef" :config="config" :sort-enabled="shouldSortModules" @module-update="updateModule" />
-        </div>
-        <div class="json-column">
-          <JsonOutput
-            :json="json"
-            :has-errors="!!hasInvalidInputs"
-            :show-diff="showDiff"
-            :changes="changes"
-            @toggle-diff="showDiff = !showDiff"
-            @scroll-to-error="scrollToFirstInvalidInput"
-            @scroll-to-module="scrollToModule"
-          />
-        </div>
+      <div class="config-column">
+        <PlatformConfig ref="platformConfigRef" :config="config" @update="updatePlatform" />
+        <ModuleList ref="moduleListRef" :config="config" :sort-enabled="shouldSortModules" @module-update="updateModule" />
       </div>
     </template>
+
+    <!-- JSON Preview Popover -->
+    <div id="json-preview" popover class="preview-popover">
+      <JsonOutput
+        :json="json"
+        :has-errors="!!hasInvalidInputs"
+        :show-diff="showDiff"
+        :changes="changes"
+        @toggle-diff="showDiff = !showDiff"
+        @scroll-to-error="scrollToFirstInvalidInput"
+        @scroll-to-module="scrollToModule"
+      />
+    </div>
 
     <ToastContainer />
   </div>
@@ -132,7 +140,7 @@ const handleBack = () => {
 <style scoped>
 .app {
   width: 100%;
-  max-width: 1800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
@@ -157,7 +165,7 @@ h1 {
   font-weight: 600;
 }
 
-.back-button {
+.back-button, .action-button {
   background: transparent;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
@@ -168,14 +176,23 @@ h1 {
   transition: all var(--transition-fast);
 }
 
-.back-button:hover {
+.back-button:hover, .action-button:hover {
   background: var(--surface-tertiary);
+}
+
+.error-button {
+  color: var(--error-text);
+  border-color: var(--error-border);
+}
+
+.error-button:hover {
+  background: var(--error-bg);
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .reset-button {
@@ -221,25 +238,32 @@ h1 {
   margin: 0 auto;
 }
 
-.main-layout {
-  display: grid;
-  grid-template-columns: minmax(550px, 2fr) minmax(350px, 1fr);
-  gap: 30px;
-  align-items: start;
-  min-height: calc(100vh - 120px);
-}
-
 .config-column {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.json-column {
-  position: sticky;
-  top: 20px;
-  height: calc(100vh - 120px);
+/* Popover */
+.preview-popover {
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--surface-secondary);
+  box-shadow: var(--shadow-md);
+  width: min(90vw, 900px);
+  height: min(85vh, 800px);
   overflow: hidden;
+}
+
+.preview-popover::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.preview-popover :deep(.json-output) {
+  height: 100%;
+  border-radius: var(--radius-md);
 }
 
 @keyframes highlight {
