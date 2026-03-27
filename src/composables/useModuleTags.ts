@@ -5,7 +5,6 @@ import { fetchTags, RateLimitError, getRateLimitRemaining } from '../services/gi
 import { getRepoName } from '../config/moduleRepoMapping'
 import { useToast } from './useToast'
 
-const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN
 
 function formatWait(seconds: number): string {
   if (seconds < 60) return `${seconds}s`
@@ -68,9 +67,8 @@ export function useModuleTags() {
 
         const remaining = getRateLimitRemaining()
         if (remaining !== null && remaining < batchSize) {
-          const hint = GITHUB_TOKEN ? 'Resets every hour.' : 'Add VITE_GITHUB_TOKEN for 5000 req/hour.'
           updateProgress.value.status = `API quota exhausted`
-          addToast(`GitHub API quota exhausted (${remaining} left). ${updatedCount} modules updated. ${hint}`, 'error')
+          addToast(`GitHub API limit reached (60 req/hour). ${updatedCount} modules updated. Resets in up to 1 hour.`, 'error')
           break
         }
 
