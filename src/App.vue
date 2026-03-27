@@ -44,12 +44,20 @@ const scrollToModule = (moduleId: string) => {
 const handleJsonSubmit = (jsonString: string) => {
   parseConfig(jsonString)
 }
+
+const handleBack = () => {
+  config.value = null
+  originalConfig.value = null
+}
 </script>
 
 <template>
   <div class="app">
     <header class="app-header">
-      <h1>Module Configuration Manager</h1>
+      <div class="header-left">
+        <button v-if="config" class="back-button" @click="handleBack" title="Back to input">&larr;</button>
+        <h1>Module Configuration Manager</h1>
+      </div>
       <ThemeToggle />
     </header>
 
@@ -97,10 +105,33 @@ const handleJsonSubmit = (jsonString: string) => {
   margin-bottom: 30px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 h1 {
   color: var(--text-on-app);
   font-size: 28px;
   font-weight: 600;
+}
+
+.back-button {
+  background: none;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-on-app);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 12px;
+  line-height: 1;
+  transition: all var(--transition-fast);
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--border-secondary);
 }
 
 .json-input-container {
