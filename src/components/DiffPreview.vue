@@ -13,7 +13,8 @@ const emit = defineEmits<{
 <template>
   <div class="diff-preview">
     <h3>Changes:</h3>
-    <ul>
+    <p v-if="!changes.length" class="no-changes">No changes yet</p>
+    <ul v-else>
       <li v-for="(change, index) in changes" :key="index">
         <template v-if="change.type === 'platform'">
           <span>{{ change.field }} changed from </span>
@@ -85,6 +86,13 @@ const emit = defineEmits<{
 
 .diff-preview li:last-child {
   border-bottom: none;
+}
+
+.no-changes {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  font-style: italic;
+  margin: 0;
 }
 
 .module-id-button {
