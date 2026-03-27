@@ -154,7 +154,6 @@ const onBlur = (e: Event) => { (e.target as HTMLInputElement).value = (e.target 
   cursor: pointer;
   color: var(--text-primary);
   font-size: 13px;
-  font-weight: 600;
   min-width: 32px;
   min-height: 32px;
   display: flex;
