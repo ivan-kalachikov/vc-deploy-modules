@@ -60,6 +60,9 @@ const sectionTitle = (type: ModuleType): string =>
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.section-header:not(:last-child) {
   margin-bottom: 20px;
 }
 
