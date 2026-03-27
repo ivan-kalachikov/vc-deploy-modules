@@ -41,12 +41,12 @@ const isChanged = () =>
         {{ formatModuleId(module.id) }}
       </a>
     </div>
+    <button
+      class="source-toggle"
+      :title="isGitHub() ? 'Move to Azure Blob' : 'Move to GitHub Releases'"
+      @click="toggleSource"
+    >{{ isGitHub() ? '↑ Blob' : '↓ Releases' }}</button>
     <div class="module-controls">
-      <button
-        class="source-toggle"
-        :title="isGitHub() ? 'Move to Azure Blob' : 'Move to GitHub Releases'"
-        @click="toggleSource"
-      >{{ isGitHub() ? '↑ Blob' : '↓ Releases' }}</button>
       <div class="input-container">
         <VersionCombobox
           :module="module"
@@ -148,21 +148,17 @@ const isChanged = () =>
 
 @container (max-width: 500px) {
   .module-item {
-    flex-direction: column;
-    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 8px;
     padding: 8px;
   }
 
   .module-info {
-    width: 100%;
+    width: auto;
+    flex: 1;
   }
 
   .module-controls {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-
-  .input-container {
     flex-basis: 100%;
   }
 }
