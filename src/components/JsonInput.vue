@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useManifestHistory } from '../composables/useManifestHistory'
+import { useToast } from '../composables/useToast'
 
 const sortModules = defineModel<boolean>('sortModules', { default: true })
 
 const jsonInput = ref('')
+const jsonUrl = ref('')
+const isLoading = ref(false)
 const error = ref('')
+const { history, addEntry, removeEntry, touchEntry } = useManifestHistory()
+const { addToast } = useToast()
 
 const emit = defineEmits<{
   submit: [value: string]
@@ -16,21 +22,77 @@ const handleSubmit = () => {
 }
 
 const handleTextareaInput = (e: Event) => {
-  const target = e.target as HTMLTextAreaElement
-  jsonInput.value = target.value
+  jsonInput.value = (e.target as HTMLTextAreaElement).value
+}
+
+async function fetchAndSubmit(url: string) {
+  const trimmed = url.trim()
+  if (!trimmed) return
+
+  isLoading.value = true
+  error.value = ''
+  try {
+    const response = await fetch(trimmed)
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
+    const text = await response.text()
+    JSON.parse(text) // validate
+    addEntry(trimmed)
+    emit('submit', text)
+  } catch (e) {
+    error.value = `Failed to fetch: ${(e as Error).message}`
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const handleUrlSubmit = () => fetchAndSubmit(jsonUrl.value)
+
+function handleHistoryClick(url: string) {
+  touchEntry(url)
+  fetchAndSubmit(url)
 }
 </script>
 
 <template>
   <div class="json-input">
-    <h2>Paste your JSON configuration</h2>
+    <!-- URL Input -->
+    <h2>Load from URL</h2>
+    <div class="url-row">
+      <input
+        v-model="jsonUrl"
+        type="text"
+        placeholder="https://example.com/packages.json"
+        class="url-input"
+        @keyup.enter="handleUrlSubmit"
+      />
+      <button type="button" :disabled="isLoading" @click="handleUrlSubmit">
+        {{ isLoading ? 'Loading...' : 'Fetch' }}
+      </button>
+    </div>
+
+    <!-- History -->
+    <div v-if="history.length" class="history">
+      <h3>History</h3>
+      <ul>
+        <li v-for="entry in history" :key="entry.url">
+          <button class="history-link" @click="handleHistoryClick(entry.url)" :title="entry.url">
+            {{ entry.label }}
+          </button>
+          <button class="history-delete" @click="removeEntry(entry.url)" title="Remove">&times;</button>
+        </li>
+      </ul>
+    </div>
+
+    <div v-if="error" class="error">{{ error }}</div>
+
+    <!-- Textarea -->
+    <h2>Or paste JSON</h2>
     <textarea
       :value="jsonInput"
       rows="20"
       placeholder="Paste your JSON here..."
       @input="handleTextareaInput"
     />
-    <div v-if="error" class="error">{{ error }}</div>
     <div class="input-controls">
       <button type="button" @click="handleSubmit">Load Configuration</button>
       <label class="sort-checkbox">
@@ -48,6 +110,110 @@ const handleTextareaInput = (e: Event) => {
   width: 100%;
 }
 
+h2 {
+  color: var(--text-on-app);
+  margin-bottom: 16px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+h2 + h2, .history + h2 {
+  margin-top: 24px;
+}
+
+.url-row {
+  display: flex;
+  gap: 8px;
+}
+
+.url-input {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-secondary);
+  font-size: 14px;
+  background: var(--surface-card);
+  color: var(--text-primary);
+}
+
+.url-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--border-focus-shadow);
+}
+
+.url-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* History */
+.history {
+  margin-top: 16px;
+}
+
+.history h3 {
+  color: var(--text-on-app);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.history ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-link {
+  background: none;
+  border: none;
+  color: var(--link);
+  cursor: pointer;
+  font-size: 13px;
+  font-family: monospace;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 600px;
+  transition: background var(--transition-fast);
+}
+
+.history-link:hover {
+  color: var(--link-hover);
+  background: rgba(255, 255, 255, 0.1);
+  text-decoration: underline;
+}
+
+.history-delete {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  transition: color var(--transition-fast);
+}
+
+.history-delete:hover {
+  color: var(--error-text);
+}
+
+/* Textarea & controls */
 .json-input textarea {
   width: 100%;
   margin-bottom: 10px;
@@ -57,7 +223,7 @@ const handleTextareaInput = (e: Event) => {
   font-family: monospace;
   font-size: 14px;
   line-height: 1.5;
-  min-height: 500px;
+  min-height: 300px;
   box-sizing: border-box;
   text-align: left;
   background: var(--surface-card);
@@ -66,7 +232,7 @@ const handleTextareaInput = (e: Event) => {
 
 .error {
   color: var(--error-text);
-  margin-bottom: 10px;
+  margin: 8px 0;
 }
 
 button {
@@ -77,17 +243,16 @@ button {
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
+  font-size: 14px;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   background: var(--primary-hover);
 }
 
-h2 {
-  color: var(--text-on-app);
-  margin-bottom: 30px;
-  font-size: 22px;
-  font-weight: 600;
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .input-controls {
@@ -108,9 +273,5 @@ h2 {
 
 .sort-checkbox input {
   cursor: pointer;
-}
-
-.spacer {
-  flex: 1;
 }
 </style>
