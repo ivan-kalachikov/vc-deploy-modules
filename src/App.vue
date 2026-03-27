@@ -8,16 +8,17 @@ import JsonInput from './components/JsonInput.vue'
 import ModuleList from './components/ModuleList.vue'
 import PlatformConfig from './components/PlatformConfig.vue'
 import JsonOutput from './components/JsonOutput.vue'
+import DiffPreview from './components/DiffPreview.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import ToastContainer from './components/ToastContainer.vue'
 import SkeletonLoader from './components/SkeletonLoader.vue'
 
 const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform, resetToOriginal } = useConfigState()
-const { generateJson } = useJsonGenerator()
+const { generateJson, copyToClipboard } = useJsonGenerator()
 const { changes } = useDiffTracker(config, originalConfig)
 const { isLoading, error, manifestUrl, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl } = useManifestLoader()
+const { addToast } = (await import('./composables/useToast')).useToast()
 
-const showDiff = ref(true)
 const moduleListRef = ref<InstanceType<typeof ModuleList> | null>(null)
 const platformConfigRef = ref<InstanceType<typeof PlatformConfig> | null>(null)
 
@@ -27,7 +28,6 @@ const hasInvalidInputs = computed(() =>
   moduleListRef.value?.hasInvalidInputs || platformConfigRef.value?.hasInvalidInputs
 )
 
-// Determine initial state: if URL param exists, start fetching immediately
 const initialUrl = getInitialUrl()
 if (initialUrl) {
   fetchManifest(initialUrl).then(text => {
@@ -52,24 +52,23 @@ const scrollToModule = (moduleId: string) => {
   }
 }
 
-const handleJsonSubmit = (text: string) => {
-  parseConfig(text)
-}
-
+const handleJsonSubmit = (text: string) => parseConfig(text)
 async function handleUrlSubmit(url: string) {
   const text = await fetchManifest(url)
   if (text) parseConfig(text)
 }
-
 async function handleHistoryClick(url: string) {
   const text = await loadFromHistory(url)
   if (text) parseConfig(text)
 }
-
 const handleBack = () => {
   config.value = null
   originalConfig.value = null
   clearManifestUrl()
+}
+const handleCopy = async () => {
+  const ok = await copyToClipboard(json.value)
+  addToast(ok ? 'JSON copied to clipboard' : 'Failed to copy', ok ? 'success' : 'error')
 }
 </script>
 
@@ -88,16 +87,15 @@ const handleBack = () => {
             @click="scrollToFirstInvalidInput"
           >Errors</button>
           <button class="action-button" popovertarget="json-preview">Preview</button>
+          <button class="action-button" @click="handleCopy">Copy</button>
           <button class="reset-button" @click="resetToOriginal">Reset</button>
         </template>
         <ThemeToggle />
       </div>
     </header>
 
-    <!-- Loading from URL param -->
     <SkeletonLoader v-if="isLoading && !config" />
 
-    <!-- Input screen -->
     <div v-else-if="!config" class="json-input-container">
       <JsonInput
         v-model:sort-modules="shouldSortModules"
@@ -109,28 +107,29 @@ const handleBack = () => {
       />
     </div>
 
-    <!-- Config screen -->
     <template v-else>
       <div v-if="manifestUrl" class="manifest-url-bar">
         <a :href="manifestUrl" target="_blank" rel="noopener noreferrer">{{ manifestUrl }}</a>
       </div>
-      <div class="config-column">
-        <PlatformConfig ref="platformConfigRef" :config="config" @update="updatePlatform" />
-        <ModuleList ref="moduleListRef" :config="config" :sort-enabled="shouldSortModules" @module-update="updateModule" />
+      <div class="main-layout">
+        <div class="config-column">
+          <PlatformConfig ref="platformConfigRef" :config="config" @update="updatePlatform" />
+          <ModuleList ref="moduleListRef" :config="config" :sort-enabled="shouldSortModules" @module-update="updateModule" />
+        </div>
+        <div class="sidebar">
+          <DiffPreview
+            :changes="changes"
+            @scroll-to-module="scrollToModule"
+          />
+        </div>
       </div>
     </template>
 
     <!-- JSON Preview Popover -->
     <div id="json-preview" popover class="preview-popover">
-      <JsonOutput
-        :json="json"
-        :has-errors="!!hasInvalidInputs"
-        :show-diff="showDiff"
-        :changes="changes"
-        @toggle-diff="showDiff = !showDiff"
-        @scroll-to-error="scrollToFirstInvalidInput"
-        @scroll-to-module="scrollToModule"
-      />
+      <div class="popover-content">
+        <pre>{{ json }}</pre>
+      </div>
     </div>
 
     <ToastContainer />
@@ -140,7 +139,7 @@ const handleBack = () => {
 <style scoped>
 .app {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
@@ -238,10 +237,24 @@ h1 {
   margin: 0 auto;
 }
 
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
 .config-column {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
 /* Popover */
@@ -250,9 +263,9 @@ h1 {
   padding: 0;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-md);
-  background: var(--surface-secondary);
+  background: var(--surface-card);
   box-shadow: var(--shadow-md);
-  width: min(90vw, 900px);
+  width: min(90vw, 800px);
   height: min(85vh, 800px);
   overflow: hidden;
 }
@@ -261,9 +274,20 @@ h1 {
   background: rgba(0, 0, 0, 0.4);
 }
 
-.preview-popover :deep(.json-output) {
+.popover-content {
   height: 100%;
-  border-radius: var(--radius-md);
+  overflow: auto;
+  padding: 20px;
+}
+
+.popover-content pre {
+  margin: 0;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @keyframes highlight {
