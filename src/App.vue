@@ -349,17 +349,21 @@ const handleCopy = async () => {
   width: 36px;
   height: 36px;
   cursor: pointer;
+  animation: logo-nudge 7s ease-in-out 3s infinite;
+}
+
+.app-logo.clicking {
+  animation: none;
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
-  animation: logo-nudge 8s ease-in-out infinite;
-  animation-delay: 3s;
 }
 
 @keyframes logo-nudge {
-  0%, 90%, 100% { transform: rotate(0deg); }
-  92% { transform: rotate(-8deg) scale(1.05); }
-  94% { transform: rotate(8deg) scale(1.1); }
-  96% { transform: rotate(-5deg) scale(1.05); }
-  98% { transform: rotate(3deg); }
+  0%, 92%, 100% { transform: rotate(0deg); }
+  93% { transform: rotate(-4deg) scale(1.02); }
+  94% { transform: rotate(4deg) scale(1.03); }
+  95% { transform: rotate(-3deg); }
+  96% { transform: rotate(2deg); }
+  97% { transform: rotate(-1deg); }
 }
 
 .app-logo.clicking {
