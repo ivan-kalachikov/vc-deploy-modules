@@ -10,6 +10,7 @@ import PlatformConfig from './components/PlatformConfig.vue'
 import JsonOutput from './components/JsonOutput.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import ToastContainer from './components/ToastContainer.vue'
+import SkeletonLoader from './components/SkeletonLoader.vue'
 
 const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform } = useConfigState()
 const { generateJson } = useJsonGenerator()
@@ -83,9 +84,7 @@ const handleBack = () => {
     </header>
 
     <!-- Loading from URL param -->
-    <div v-if="isLoading && !config" class="loading-state">
-      <p>Loading manifest...</p>
-    </div>
+    <SkeletonLoader v-if="isLoading && !config" />
 
     <!-- Input screen -->
     <div v-else-if="!config" class="json-input-container">
@@ -167,19 +166,6 @@ h1 {
 .back-button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: var(--border-secondary);
-}
-
-.loading-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-}
-
-.loading-state p {
-  color: var(--text-on-app);
-  font-size: 16px;
-  opacity: 0.7;
 }
 
 .json-input-container {
