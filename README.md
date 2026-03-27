@@ -25,6 +25,7 @@ Load a manifest from URL or paste it, edit module versions and sources visually,
 - Version dropdown with available releases from GitHub
 - Pick a PR to get pre-release artifact version
 - Move modules between Azure Blob and GitHub Releases
+- Update all GitHub modules to latest versions in one click
 - Auto-assign latest tag when moving to Releases
 
 **Tracking**
