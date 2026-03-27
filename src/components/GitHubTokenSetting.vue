@@ -37,9 +37,11 @@ const remove = () => {
     <div v-if="isOpen" class="token-panel">
       <p class="token-hint">
         Personal token raises the API limit from 60 to 5,000 requests/hour.
-        <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">Create a fine-grained token</a>
-        with <strong>read-only</strong> access to <strong>VirtoCommerce</strong> repositories
-        (Contents permission only). Token is stored in your browser only.
+        <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">Create a fine-grained token</a>:
+        scope to <strong>VirtoCommerce</strong> organization,
+        grant <strong>Pull requests: Read-only</strong> permission
+        (Metadata is included automatically).
+        Token is stored in your browser only.
       </p>
       <div class="token-input-row">
         <input
