@@ -160,7 +160,7 @@ h2 {
 
 .history-link:hover {
   color: var(--link-hover);
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-tertiary);
   text-decoration: underline;
 }
 
@@ -203,17 +203,18 @@ h2 {
 
 button {
   width: fit-content;
-  padding: 10px 20px;
-  background: var(--primary);
-  color: var(--text-on-primary);
-  border: none;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
+  transition: all var(--transition-fast);
 }
 
 button:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: var(--surface-tertiary);
 }
 
 button:disabled {

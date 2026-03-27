@@ -17,19 +17,17 @@ const labels: Record<string, string> = { system: 'System', light: 'Light', dark:
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border: 1px solid var(--border-primary);
   border-radius: 999px;
-  background: var(--surface-secondary);
-  color: var(--text-secondary);
-  font-size: 12px;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: all var(--transition-fast);
   line-height: 1.4;
 }
 .theme-toggle:hover {
   background: var(--surface-tertiary);
-  color: var(--text-primary);
-  border-color: var(--border-secondary);
 }
 </style>

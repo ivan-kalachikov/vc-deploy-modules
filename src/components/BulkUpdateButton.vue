@@ -36,22 +36,23 @@ const emit = defineEmits<{
 }
 
 .update-all-button {
-  padding: 8px 12px;
-  background: var(--primary);
-  color: var(--text-on-primary);
-  border: none;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
+  transition: all var(--transition-fast);
 }
 
 .update-all-button:hover:not(:disabled) {
-  background: var(--primary-hover);
+  background: var(--surface-tertiary);
 }
 
 .update-all-button:disabled {
-  background: var(--primary-disabled);
+  opacity: 0.6;
   cursor: not-allowed;
 }
 

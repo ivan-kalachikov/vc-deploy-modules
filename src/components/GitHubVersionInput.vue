@@ -123,14 +123,15 @@ const onInputBlur = (e: Event) => {
 }
 
 .load-tags-button {
-  padding: 8px;
-  background: var(--surface-tertiary);
-  border: 1px solid var(--border-secondary);
+  padding: 6px;
+  background: transparent;
+  border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-size: 14px;
-  min-width: 35px;
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -138,8 +139,7 @@ const onInputBlur = (e: Event) => {
 }
 
 .load-tags-button:hover:not(:disabled) {
-  background: var(--border-primary);
-  transform: scale(1.05);
+  background: var(--surface-tertiary);
 }
 
 .load-tags-button:disabled {

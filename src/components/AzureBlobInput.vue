@@ -147,15 +147,16 @@ const onBlur = (e: Event) => { (e.target as HTMLInputElement).value = (e.target 
 }
 
 .pr-button {
-  padding: 8px 10px;
-  background: var(--surface-tertiary);
-  border: 1px solid var(--border-secondary);
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  color: var(--text-secondary);
-  font-size: 12px;
+  color: var(--text-primary);
+  font-size: 13px;
   font-weight: 600;
-  min-width: 38px;
+  min-width: 32px;
+  min-height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,7 +164,7 @@ const onBlur = (e: Event) => { (e.target as HTMLInputElement).value = (e.target 
 }
 
 .pr-button:hover:not(:disabled) {
-  background: var(--border-primary);
+  background: var(--surface-tertiary);
 }
 
 .pr-button:disabled {

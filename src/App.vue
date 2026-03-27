@@ -158,20 +158,24 @@ h1 {
 }
 
 .back-button {
-  background: none;
+  background: transparent;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
-  color: var(--text-on-app);
-  font-size: 20px;
+  color: var(--text-primary);
+  font-size: 16px;
   cursor: pointer;
-  padding: 4px 12px;
+  padding: 6px;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
   transition: all var(--transition-fast);
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--border-secondary);
+  background: var(--surface-tertiary);
 }
 
 .header-right {
@@ -181,8 +185,8 @@ h1 {
 }
 
 .reset-button {
-  padding: 4px 12px;
-  background: none;
+  padding: 6px 12px;
+  background: transparent;
   border: 1px solid var(--error-border);
   border-radius: var(--radius-sm);
   color: var(--error-text);
@@ -193,7 +197,6 @@ h1 {
 
 .reset-button:hover {
   background: var(--error-bg);
-  border-color: var(--error);
 }
 
 .manifest-url-bar {

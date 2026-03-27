@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import type { DiffChange } from '../types'
 import { useJsonGenerator } from '../composables/useJsonGenerator'
 import { useToast } from '../composables/useToast'
@@ -20,13 +19,6 @@ const emit = defineEmits<{
 
 const { copyToClipboard } = useJsonGenerator()
 const { addToast } = useToast()
-
-const copyButtonColor = computed(() =>
-  props.hasErrors ? 'var(--error-text)' : 'var(--success)'
-)
-const copyButtonHoverColor = computed(() =>
-  props.hasErrors ? 'var(--error)' : 'var(--success-hover)'
-)
 
 const handleCopy = async () => {
   const ok = await copyToClipboard(props.json)
@@ -101,41 +93,40 @@ const handleCopy = async () => {
 .json-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .json-actions { display: flex; gap: 8px; align-items: center; }
 .action-button {
-  padding: 8px;
+  padding: 6px;
   background: transparent;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all var(--transition-fast);
   font-size: 16px;
   line-height: 1;
-  min-width: 35px;
-  min-height: 35px;
+  min-width: 32px;
+  min-height: 32px;
 }
-.action-button:hover { background: var(--surface-tertiary); transform: scale(1.05); }
-.error-button { background: var(--error-bg); border-color: var(--error-border); color: var(--error-text); }
-.error-button:hover { background: var(--error-bg-hover); border-color: var(--error-border-hover); transform: scale(1.05); }
-.error-button:active, .copy-button:active { transform: scale(0.95); }
+.action-button:hover { background: var(--surface-tertiary); }
+.error-button { color: var(--error-text); border-color: var(--error-border); }
+.error-button:hover { background: var(--error-bg); }
 .copy-button {
-  padding: 8px 12px;
-  background: v-bind(copyButtonColor);
+  padding: 6px 12px;
+  background: var(--primary);
   color: var(--text-on-primary);
   border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   display: flex;
   align-items: center;
   gap: 6px;
   transition: all var(--transition-fast);
-  height: 35px;
+  height: 32px;
 }
-.copy-button:hover { background: v-bind(copyButtonHoverColor); transform: scale(1.05); }
+.copy-button:hover { background: var(--primary-hover); }
 .copy-button .icon { width: 16px; height: 16px; flex-shrink: 0; }
 .icon { display: block; }
 </style>
