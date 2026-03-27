@@ -48,11 +48,12 @@ export interface DiffChange {
   type: 'platform' | 'module'
   field?: string          // for platform changes (e.g., 'Platform Version')
   moduleId?: string       // for module changes
-  action: 'changed' | 'added' | 'moved'
+  action: 'changed' | 'added' | 'moved' | 'deleted'
   oldValue?: string
   newValue?: string
   fromSource?: string     // for moved modules
   toSource?: string       // for moved modules
+  currentSourceType?: 'AzureBlob' | 'GithubReleases'  // current source for undo
 }
 
 // Toast notification

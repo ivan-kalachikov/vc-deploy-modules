@@ -105,7 +105,28 @@ const handleInputChange = (moduleId: string, type: ModuleType, value: string) =>
 // Revert a single module to its original state
 const handleRevert = (moduleId: string, currentType: ModuleType) => {
   const module = modules.value.find(m => m.id === moduleId && m.sourceType === currentType)
-  if (!module || !module.originalSourceType) return
+
+  // Deleted module — restore from original config
+  if (!module) {
+    const orig = findOriginal(moduleId)
+    if (!orig) return
+    const restored: ModuleViewModel = {
+      id: moduleId,
+      value: orig.value,
+      sourceType: orig.sourceType,
+      originalValue: orig.value,
+      originalSourceType: orig.sourceType,
+    }
+    if (orig.sourceType === 'GithubReleases') loadCachedTags(restored)
+    modules.value.push(restored)
+    const fullValue = orig.sourceType === 'GithubReleases'
+      ? orig.value
+      : `${moduleId}_${orig.value}`
+    emit('module-update', moduleId, orig.sourceType, fullValue)
+    return
+  }
+
+  if (!module.originalSourceType) return
 
   const origSource = module.originalSourceType
   const origValue = module.originalValue || ''
@@ -165,6 +186,14 @@ const moveModule = async (moduleId: string, fromType: ModuleType, toType: Module
   emit('module-update', moduleId, toType, fullValue)
 }
 
+// Delete a module (mark as deleted, keep in view models for undo)
+const handleDelete = (moduleId: string, type: ModuleType) => {
+  const idx = modules.value.findIndex(m => m.id === moduleId && m.sourceType === type)
+  if (idx === -1) return
+  modules.value.splice(idx, 1)
+  emit('module-update', moduleId, type, '__DELETE__')
+}
+
 // Update all GitHub modules to latest
 const handleUpdateAll = async () => {
   const count = await updateAllToLatest(modules.value, (moduleId, latestVersion) => {
@@ -185,8 +214,8 @@ const handleTagsLoaded = (moduleId: string, tags: string[]) => {
 }
 
 // Validation
-const hasInvalidInputs = computed(() =>
-  modules.value.some(module => {
+const invalidCount = computed(() =>
+  modules.value.filter(module => {
     const trimmed = module.value.trim()
     if (!trimmed) return true
     if (module.sourceType === 'GithubReleases' && module.tags?.length) {
@@ -195,37 +224,56 @@ const hasInvalidInputs = computed(() =>
     return module.sourceType === 'GithubReleases'
       ? !isValidVersion(trimmed)
       : !isValidBlobName(trimmed)
-  }),
+  }).length,
 )
 
+const hasInvalidInputs = computed(() => invalidCount.value > 0)
+
+const azureSectionRef = ref<InstanceType<typeof ModuleSourceSection> | null>(null)
+const githubSectionRef = ref<InstanceType<typeof ModuleSourceSection> | null>(null)
+
 const scrollToFirstInvalidInput = () => {
-  const el = document.querySelector('.error') as HTMLElement
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    el.focus()
-  }
+  // Expand both sections to ensure error elements are visible
+  azureSectionRef.value?.expand()
+  githubSectionRef.value?.expand()
+  nextTick(() => {
+    const el = document.querySelector('.error') as HTMLElement
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.focus()
+    }
+  })
 }
 
-defineExpose({ hasInvalidInputs, scrollToFirstInvalidInput })
+const expandAll = () => {
+  azureSectionRef.value?.expand()
+  githubSectionRef.value?.expand()
+}
+
+defineExpose({ hasInvalidInputs, invalidCount, scrollToFirstInvalidInput, handleRevert, expandAll })
 </script>
 
 <template>
   <div class="module-list">
     <ModuleSourceSection
+      ref="azureSectionRef"
       source-type="AzureBlob"
       :modules="azureModules"
       @module-update="handleInputChange"
       @module-move="moveModule"
       @module-revert="handleRevert"
+      @module-delete="handleDelete"
       @tags-loaded="handleTagsLoaded"
     />
 
     <ModuleSourceSection
+      ref="githubSectionRef"
       source-type="GithubReleases"
       :modules="githubModules"
       @module-update="handleInputChange"
       @module-move="moveModule"
       @module-revert="handleRevert"
+      @module-delete="handleDelete"
       @tags-loaded="handleTagsLoaded"
     >
       <template #header-actions>

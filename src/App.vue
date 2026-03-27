@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useConfigState } from './composables/useConfigState'
 import { useJsonGenerator } from './composables/useJsonGenerator'
 import { useDiffTracker } from './composables/useDiffTracker'
@@ -39,21 +39,35 @@ if (initialUrl) {
   })
 }
 
-const scrollToFirstInvalidInput = () => {
-  if (platformConfigRef.value?.hasInvalidInputs) {
-    platformConfigRef.value.scrollToFirstInvalidInput()
-  } else if (moduleListRef.value?.hasInvalidInputs) {
-    moduleListRef.value.scrollToFirstInvalidInput()
-  }
+const errorScrollIndex = ref(0)
+
+const scrollToNextInvalidInput = () => {
+  // Expand all sections first
+  moduleListRef.value?.expandAll()
+  nextTick(() => {
+    const allErrors = Array.from(document.querySelectorAll('.error')) as HTMLElement[]
+    if (!allErrors.length) return
+    // Wrap around
+    if (errorScrollIndex.value >= allErrors.length) errorScrollIndex.value = 0
+    const el = allErrors[errorScrollIndex.value]
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.focus()
+    el.classList.add('highlight')
+    setTimeout(() => el.classList.remove('highlight'), 2000)
+    errorScrollIndex.value++
+  })
 }
 
 const scrollToModule = (moduleId: string) => {
-  const el = document.querySelector(`[data-module-id="${moduleId.trim()}"]`) as HTMLElement
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    el.classList.add('highlight')
-    setTimeout(() => el.classList.remove('highlight'), 2000)
-  }
+  moduleListRef.value?.expandAll()
+  nextTick(() => {
+    const el = document.querySelector(`[data-module-id="${moduleId.trim()}"]`) as HTMLElement
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.classList.add('highlight')
+      setTimeout(() => el.classList.remove('highlight'), 2000)
+    }
+  })
 }
 
 const handleJsonSubmit = (text: string) => parseConfig(text)
@@ -228,8 +242,16 @@ const handleCopy = async () => {
     <SkeletonLoader v-if="isLoading && !config" />
 
     <div v-else-if="!config" class="json-input-container">
+      <p class="app-description">
+        Visual editor for VirtoCommerce deployment manifests. Load a manifest from URL or paste JSON, edit module versions and sources, copy the result.
+      </p>
+      <p class="app-links">
+        <a href="https://github.com/ivan-kalachikov/vc-deploy-modules" target="_blank" rel="noopener noreferrer" class="repo-link">
+          <svg class="gh-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a>
+      </p>
       <JsonInput
-        v-model:sort-modules="shouldSortModules"
         :is-loading="isLoading"
         :error="error"
         @submit="handleJsonSubmit"
@@ -259,12 +281,17 @@ const handleCopy = async () => {
           <button
             v-if="hasInvalidInputs"
             class="sidebar-error"
-            @click="scrollToFirstInvalidInput"
-          >Some fields have invalid values <small>(click to locate)</small></button>
+            @click="scrollToNextInvalidInput"
+          >{{ moduleListRef?.invalidCount || '' }} invalid field{{ (moduleListRef?.invalidCount || 0) > 1 ? 's' : '' }} <small>(click to locate)</small></button>
           <DiffPreview
             :changes="changes"
             @scroll-to-module="scrollToModule"
+            @revert-module="(id, type) => moduleListRef?.handleRevert(id, type)"
           />
+          <label class="sort-checkbox">
+            <input type="checkbox" v-model="shouldSortModules">
+            Sort modules alphabetically
+          </label>
           <GitHubTokenSetting />
         </div>
       </div>
@@ -412,6 +439,48 @@ h1 {
   text-decoration: underline;
 }
 
+.app-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+}
+
+.app-links {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 0 0 20px;
+}
+
+.repo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.repo-link:hover {
+  color: var(--text-primary);
+}
+
+.repo-link .gh-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.example-link {
+  color: var(--link);
+  text-decoration: none;
+  margin-left: 4px;
+}
+
+.example-link:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
 .json-input-container {
   width: 100%;
   max-width: 1600px;
@@ -496,6 +565,16 @@ h1 {
   45% { transform: translate(-1px, 0) rotate(-1deg); }
   60% { transform: translate(1px, 1px) rotate(1deg); }
   80% { transform: translate(-1px, 0) rotate(-0.5deg); }
+}
+
+.sort-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-bottom: 8px;
 }
 
 .sidebar-error {

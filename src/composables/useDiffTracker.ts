@@ -58,6 +58,7 @@ export function useDiffTracker(
             action: 'added',
             newValue: source.Name,
             toSource: source.Name,
+            currentSourceType: source.Name as 'AzureBlob' | 'GithubReleases',
           })
         } else if (originalSourceName !== source.Name) {
           const oldVal =
@@ -77,6 +78,7 @@ export function useDiffTracker(
             newValue: newVal,
             fromSource: originalSourceName,
             toSource: source.Name,
+            currentSourceType: source.Name as 'AzureBlob' | 'GithubReleases',
           })
         } else if (source.Name === 'GithubReleases') {
           if (originalModule.Version !== module.Version) {
@@ -86,6 +88,7 @@ export function useDiffTracker(
               action: 'changed',
               oldValue: originalModule.Version || '(none)',
               newValue: module.Version || '(none)',
+              currentSourceType: 'GithubReleases',
             })
           }
         } else {
@@ -94,10 +97,46 @@ export function useDiffTracker(
               type: 'module',
               moduleId,
               action: 'changed',
-              oldValue: originalModule.BlobName || '(none)',
-              newValue: module.BlobName || '(none)',
+              oldValue: originalModule.BlobName?.split('_')[1] || '(none)',
+              newValue: module.BlobName?.split('_')[1] || '(none)',
+              currentSourceType: 'AzureBlob',
             })
           }
+        }
+      })
+    })
+
+    // Detect deleted modules (in original but not in current)
+    originalConfig.value.Sources.forEach((origSource) => {
+      origSource.Modules.forEach((origModule) => {
+        const moduleId = origSource.Name === 'GithubReleases'
+          ? origModule.Id || ''
+          : origModule.BlobName?.split('_')[0] || ''
+        if (!moduleId) return
+
+        let found = false
+        config.value!.Sources.forEach((source) => {
+          if (source.Modules.find((m) =>
+            source.Name === 'GithubReleases'
+              ? m.Id === moduleId
+              : m.BlobName?.startsWith(moduleId + '_'),
+          )) {
+            found = true
+          }
+        })
+
+        if (!found) {
+          const oldVal = origSource.Name === 'GithubReleases'
+            ? origModule.Version || '(none)'
+            : origModule.BlobName?.split('_')[1] || '(none)'
+          items.push({
+            type: 'module',
+            moduleId,
+            action: 'deleted',
+            oldValue: oldVal,
+            fromSource: origSource.Name,
+            currentSourceType: origSource.Name as 'AzureBlob' | 'GithubReleases',
+          })
         }
       })
     })
