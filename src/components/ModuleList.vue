@@ -107,16 +107,19 @@ const handleRevert = (moduleId: string, currentType: ModuleType) => {
   const module = modules.value.find(m => m.id === moduleId && m.sourceType === currentType)
   if (!module || !module.originalSourceType) return
 
-  if (module.originalSourceType !== currentType) {
+  const origSource = module.originalSourceType
+  const origValue = module.originalValue || ''
+
+  if (origSource !== currentType) {
     // Was moved — move it back and set original value
-    moveModule(moduleId, currentType, module.originalSourceType).then(() => {
+    moveModule(moduleId, currentType, origSource).then(() => {
       const restored = modules.value.find(m => m.id === moduleId)
-      if (restored && module.originalValue !== undefined) {
-        restored.value = module.originalValue
-        const fullValue = module.originalSourceType === 'GithubReleases'
-          ? module.originalValue
-          : `${moduleId}_${module.originalValue}`
-        emit('module-update', moduleId, module.originalSourceType, fullValue)
+      if (restored) {
+        restored.value = origValue
+        const fullValue = origSource === 'GithubReleases'
+          ? origValue
+          : `${moduleId}_${origValue}`
+        emit('module-update', moduleId, origSource, fullValue)
       }
     })
   } else {

@@ -1,3 +1,6 @@
+[![Deploy](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml/badge.svg)](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml)
+[![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)]()
+
 # Module Configuration Manager
 
 Web GUI for editing VirtoCommerce deployment manifests (`packages.json`).

@@ -1,5 +1,5 @@
 import { toRaw } from 'vue'
-import type { ConfigurationData, ModuleBase } from '../types'
+import type { ConfigurationData, ModuleBase, Source } from '../types'
 import { getModuleId } from '../utils/helpers'
 
 export function useJsonGenerator() {
@@ -13,37 +13,21 @@ export function useJsonGenerator() {
 
     if (shouldSort) {
       newConfig.Sources = newConfig.Sources
-        .sort((a: { Name: string }, b: { Name: string }) =>
-          a.Name.localeCompare(b.Name),
-        )
-        .map(
-          (source: {
-            Name: string
-            Modules: ModuleBase[]
-            Container?: string
-            ServiceUri?: string
-            ModuleSources?: string[]
-          }) => {
-            const sortedModules = [...source.Modules].sort((a, b) =>
-              getModuleId(a).localeCompare(getModuleId(b)),
-            )
+        .sort((a, b) => a.Name.localeCompare(b.Name))
+        .map((source) => {
+          const sortedModules = [...source.Modules].sort((a, b) =>
+            getModuleId(a).localeCompare(getModuleId(b)),
+          )
 
-            return {
-              Name: source.Name,
-              ...(source.Name === 'AzureBlob'
-                ? {
-                    Container: source.Container,
-                    ServiceUri: source.ServiceUri,
-                  }
-                : {
-                    ModuleSources: source.ModuleSources
-                      ? [...source.ModuleSources].sort()
-                      : [],
-                  }),
-              Modules: sortedModules,
-            }
-          },
-        )
+          if (source.Name === 'AzureBlob') {
+            return { Name: source.Name, Container: source.Container, ServiceUri: source.ServiceUri, Modules: sortedModules }
+          }
+          return {
+            Name: source.Name,
+            ModuleSources: source.ModuleSources ? [...source.ModuleSources].sort() : [],
+            Modules: sortedModules,
+          }
+        }) as Source[]
 
       if (newConfig.ModuleSources) {
         newConfig.ModuleSources = [...newConfig.ModuleSources].sort()
