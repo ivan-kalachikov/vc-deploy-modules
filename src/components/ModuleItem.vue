@@ -41,7 +41,7 @@ const toggleSource = () => {
         class="source-toggle"
         :title="isGitHub() ? 'Move to Azure Blob' : 'Move to GitHub Releases'"
         @click="toggleSource"
-      >{{ isGitHub() ? '→ Blob' : '→ Releases' }}</button>
+      >{{ isGitHub() ? '↓ Blob' : '↑ Releases' }}</button>
       <div class="input-container">
         <VersionCombobox
           :module="module"
@@ -97,24 +97,16 @@ const toggleSource = () => {
 }
 
 .source-toggle {
-  padding: 4px 8px;
+  padding: 8px 10px;
   border: 1px solid var(--border-secondary);
   border-radius: var(--radius-sm);
   background: var(--surface-tertiary);
   color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
-  min-width: 32px;
   text-align: center;
-}
-
-.source-toggle.github {
-  background: var(--surface-card);
-  color: var(--text-primary);
-  border-color: var(--border-primary);
 }
 
 .source-toggle:hover {
