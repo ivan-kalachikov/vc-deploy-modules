@@ -119,7 +119,7 @@ const handleCopy = async () => {
             v-if="hasInvalidInputs"
             class="sidebar-error"
             @click="scrollToFirstInvalidInput"
-          >Some fields have invalid values</button>
+          >Some fields have invalid values <small>— click to locate</small></button>
           <DiffPreview
             :changes="changes"
             @scroll-to-module="scrollToModule"
@@ -284,6 +284,10 @@ h1 {
 .sidebar-error:hover {
   background: var(--error-bg-hover);
   border-color: var(--error);
+}
+
+.sidebar-error small {
+  opacity: 0.7;
 }
 
 /* Popover */
