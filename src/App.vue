@@ -119,7 +119,7 @@ const handleCopy = async () => {
             v-if="hasInvalidInputs"
             class="sidebar-error"
             @click="scrollToFirstInvalidInput"
-          >Some fields have invalid values <small>— click to locate</small></button>
+          >Some fields have invalid values <small>(click to locate)</small></button>
           <DiffPreview
             :changes="changes"
             @scroll-to-module="scrollToModule"
