@@ -103,3 +103,11 @@ src/
 ## Tech Stack
 
 [Vue 3](https://vuejs.org) + [TypeScript](https://www.typescriptlang.org) + [Vite](https://vite.dev) + [VueUse](https://vueuse.org)
+
+## Contributing
+
+PRs welcome. For questions or suggestions, email [ivan.kalachikov@gmail.com](mailto:ivan.kalachikov@gmail.com).
+
+## License
+
+[MIT](LICENSE)
