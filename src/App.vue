@@ -77,7 +77,7 @@ const handleBack = () => {
   <div class="app">
     <header class="app-header">
       <div class="header-left">
-        <button v-if="config" class="back-button" @click="handleBack" title="Back to input">&larr;</button>
+        <button v-if="config" class="back-button" @click="handleBack">Back</button>
         <h1>Module Configuration Manager</h1>
       </div>
       <div class="header-right">
@@ -162,15 +162,9 @@ h1 {
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 16px;
+  font-size: 13px;
   cursor: pointer;
-  padding: 6px;
-  min-width: 32px;
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+  padding: 6px 12px;
   transition: all var(--transition-fast);
 }
 

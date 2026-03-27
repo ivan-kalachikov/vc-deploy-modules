@@ -16,7 +16,7 @@ const emit = defineEmits<{
       :disabled="isUpdating"
       @click="emit('update-all')"
     >
-      {{ isUpdating ? 'Updating...' : 'Update All To Latest Versions' }}
+      {{ isUpdating ? 'Updating...' : 'Update All' }}
     </button>
     <div v-if="isUpdating" class="progress-container">
       <div

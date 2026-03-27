@@ -91,7 +91,7 @@ const onBlur = (e: Event) => { (e.target as HTMLInputElement).value = (e.target 
         :title="'Pick from open PRs'"
         @click="prs ? (prs = undefined) : loadPrs()"
       >
-        {{ isLoadingPrs || isLoadingArtifact ? '\u231B' : 'PR' }}
+        {{ isLoadingPrs || isLoadingArtifact ? '...' : 'PR' }}
       </button>
       <ul v-if="prs?.length" class="pr-dropdown">
         <li v-for="pr in prs" :key="pr.number" @click="selectPr(pr.number)">

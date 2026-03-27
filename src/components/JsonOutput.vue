@@ -38,24 +38,17 @@ const handleCopy = async () => {
         <button
           v-if="hasErrors"
           class="action-button error-button"
-          title="Some fields have invalid values"
           @click="emit('scroll-to-error')"
         >
-          ⚠️
+          Errors
         </button>
         <button
           class="action-button"
-          :title="showDiff ? 'Hide Changes' : 'Show Changes'"
           @click="emit('toggle-diff')"
         >
-          {{ showDiff ? '⬆️' : '⬇️' }}
+          {{ showDiff ? 'Hide Diff' : 'Show Diff' }}
         </button>
-        <button class="copy-button" @click="handleCopy">
-          <svg class="icon" viewBox="0 0 24 24" width="16" height="16">
-            <path fill="currentColor" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
-          </svg>
-          Copy
-        </button>
+        <button class="copy-button" @click="handleCopy">Copy</button>
       </div>
     </div>
     <DiffPreview
@@ -93,20 +86,14 @@ const handleCopy = async () => {
 .json-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .json-actions { display: flex; gap: 8px; align-items: center; }
 .action-button {
-  padding: 6px;
+  padding: 6px 12px;
   background: transparent;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: all var(--transition-fast);
-  font-size: 16px;
-  line-height: 1;
-  min-width: 32px;
-  min-height: 32px;
+  font-size: 13px;
 }
 .action-button:hover { background: var(--surface-tertiary); }
 .error-button { color: var(--error-text); border-color: var(--error-border); }
@@ -120,13 +107,7 @@ const handleCopy = async () => {
   cursor: pointer;
   font-size: 13px;
   font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 6px;
   transition: all var(--transition-fast);
-  height: 32px;
 }
 .copy-button:hover { background: var(--primary-hover); }
-.copy-button .icon { width: 16px; height: 16px; flex-shrink: 0; }
-.icon { display: block; }
 </style>

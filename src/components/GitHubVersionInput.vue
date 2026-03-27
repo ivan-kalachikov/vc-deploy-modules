@@ -62,7 +62,7 @@ const onInputBlur = (e: Event) => {
       :title="module.tags ? 'Reload tags' : 'Load available versions'"
       @click="emit('load-tags')"
     >
-      {{ module.isLoadingTags ? '\u231B' : '\u21BB' }}
+      {{ module.isLoadingTags ? '...' : 'Tags' }}
     </button>
   </div>
 </template>
@@ -123,18 +123,13 @@ const onInputBlur = (e: Event) => {
 }
 
 .load-tags-button {
-  padding: 6px;
+  padding: 6px 12px;
   background: transparent;
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--text-primary);
-  font-size: 14px;
-  min-width: 32px;
-  min-height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 13px;
   transition: all var(--transition-fast);
 }
 
