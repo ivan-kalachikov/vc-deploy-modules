@@ -17,21 +17,51 @@ function getHeaders(): Record<string, string> {
   }
 }
 
+function parseRateLimitWait(response: Response): number {
+  const retryAfter = response.headers.get('retry-after')
+  if (retryAfter) return parseInt(retryAfter)
+
+  const resetEpoch = response.headers.get('x-ratelimit-reset')
+  if (resetEpoch) {
+    const wait = parseInt(resetEpoch) - Math.floor(Date.now() / 1000)
+    return Math.max(wait, 1)
+  }
+
+  return 60
+}
+
+// Track remaining requests from last response
+let rateLimitRemaining: number | null = null
+
+function updateRateLimit(response: Response) {
+  const remaining = response.headers.get('x-ratelimit-remaining')
+  if (remaining !== null) rateLimitRemaining = parseInt(remaining)
+}
+
+export function getRateLimitRemaining(): number | null {
+  return rateLimitRemaining
+}
+
+async function githubFetch(url: string): Promise<Response> {
+  const response = await fetch(url, { headers: getHeaders() })
+  updateRateLimit(response)
+
+  if (response.status === 403 || response.status === 429) {
+    throw new RateLimitError(parseRateLimitWait(response))
+  }
+
+  return response
+}
+
 export async function fetchTags(repoName: string): Promise<string[]> {
   let allTags: Array<{ name: string }> = []
   let page = 1
   let hasNext = true
 
   while (hasNext) {
-    const response = await fetch(
+    const response = await githubFetch(
       `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100&page=${page}`,
-      { headers: getHeaders() },
     )
-    if (response.status === 403 || response.status === 429) {
-      const retryAfter = response.headers.get('retry-after')
-      const wait = retryAfter ? parseInt(retryAfter) : 60
-      throw new RateLimitError(wait)
-    }
     if (!response.ok) {
       throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
     }
@@ -54,9 +84,8 @@ export interface PrInfo {
 }
 
 export async function fetchOpenPrs(repoName: string): Promise<PrInfo[]> {
-  const response = await fetch(
+  const response = await githubFetch(
     `https://api.github.com/repos/VirtoCommerce/${repoName}/pulls?state=open&per_page=30`,
-    { headers: getHeaders() },
   )
   if (!response.ok) {
     throw new Error(`GitHub API returned ${response.status}`)
@@ -83,9 +112,8 @@ export async function fetchPrArtifact(
   repo: string,
   prNumber: string,
 ): Promise<ArtifactInfo | null> {
-  const response = await fetch(
+  const response = await githubFetch(
     `https://api.github.com/repos/VirtoCommerce/${repo}/pulls/${prNumber}`,
-    { headers: getHeaders() },
   )
   if (!response.ok) {
     throw new Error(`Failed to fetch PR description: ${response.status}`)

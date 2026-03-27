@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 import type { ModuleViewModel } from '../types'
 import { getCachedTags, setCachedTags } from '../services/tagCache'
-import { fetchTags, RateLimitError } from '../services/github'
+import { fetchTags, RateLimitError, getRateLimitRemaining } from '../services/github'
 import { getRepoName } from '../config/moduleRepoMapping'
 import { useToast } from './useToast'
 
@@ -57,6 +57,15 @@ export function useModuleTags() {
     try {
       for (let i = 0; i < githubModules.length; i += batchSize) {
         if (i > 0) await new Promise(r => setTimeout(r, 300))
+
+        // Check remaining requests before batch
+        const remaining = getRateLimitRemaining()
+        if (remaining !== null && remaining < batchSize) {
+          updateProgress.value.status = `Low API quota (${remaining} left) — stopping`
+          addToast(`GitHub API quota low (${remaining} requests left). ${updatedCount} modules updated.`, 'info')
+          break
+        }
+
         const batch = githubModules.slice(i, i + batchSize)
 
         try {
