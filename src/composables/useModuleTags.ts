@@ -39,7 +39,7 @@ export function useModuleTags() {
   async function updateAllToLatest(
     modules: ModuleViewModel[],
     onModuleUpdated: (moduleId: string, latestVersion: string) => void,
-    batchSize = 10,
+    batchSize = 5,
   ): Promise<number> {
     const githubModules = modules.filter(
       (m) => m.sourceType === 'GithubReleases',
@@ -53,6 +53,7 @@ export function useModuleTags() {
 
     try {
       for (let i = 0; i < githubModules.length; i += batchSize) {
+        if (i > 0) await new Promise(r => setTimeout(r, 1000))
         const batch = githubModules.slice(i, i + batchSize)
 
         const results = await Promise.allSettled(
