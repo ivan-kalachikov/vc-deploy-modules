@@ -103,4 +103,4 @@ src/
 
 ## Tech Stack
 
-Vue 3 + TypeScript + Vite + [VueUse](https://vueuse.org).
+[Vue 3](https://vuejs.org) + [TypeScript](https://www.typescriptlang.org) + [Vite](https://vite.dev) + [VueUse](https://vueuse.org)
