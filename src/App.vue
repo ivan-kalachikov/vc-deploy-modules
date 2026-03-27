@@ -118,7 +118,7 @@ const handleCopy = async () => {
           <div class="sidebar-actions">
             <button class="action-button" popovertarget="json-preview">Preview</button>
             <button class="action-button" @click="handleCopy">Copy</button>
-            <button class="reset-button" @click="resetToOriginal">Reset</button>
+            <button class="reset-button" :disabled="!changes.length" @click="resetToOriginal">Reset</button>
           </div>
           <DiffPreview
             :changes="changes"
