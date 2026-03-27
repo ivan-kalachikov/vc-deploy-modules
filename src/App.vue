@@ -81,16 +81,11 @@ const handleCopy = async () => {
         <h1>Module Configuration Manager</h1>
       </div>
       <div class="header-right">
-        <template v-if="config">
-          <button
-            v-if="hasInvalidInputs"
-            class="action-button error-button"
-            @click="scrollToFirstInvalidInput"
-          >Errors</button>
-          <button class="action-button" popovertarget="json-preview">Preview</button>
-          <button class="action-button" @click="handleCopy">Copy</button>
-          <button class="reset-button" @click="resetToOriginal">Reset</button>
-        </template>
+        <button
+          v-if="config && hasInvalidInputs"
+          class="action-button error-button"
+          @click="scrollToFirstInvalidInput"
+        >Errors</button>
         <ThemeToggle />
       </div>
     </header>
@@ -118,6 +113,11 @@ const handleCopy = async () => {
           <ModuleList ref="moduleListRef" :config="config" :sort-enabled="shouldSortModules" @module-update="updateModule" />
         </div>
         <div class="sidebar">
+          <div class="sidebar-actions">
+            <button class="action-button" popovertarget="json-preview">Preview</button>
+            <button class="action-button" @click="handleCopy">Copy</button>
+            <button class="reset-button" @click="resetToOriginal">Reset</button>
+          </div>
           <DiffPreview
             :changes="changes"
             @scroll-to-module="scrollToModule"
@@ -256,6 +256,14 @@ h1 {
   top: 20px;
   max-height: calc(100vh - 120px);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-actions {
+  display: flex;
+  gap: 8px;
 }
 
 /* Popover */
