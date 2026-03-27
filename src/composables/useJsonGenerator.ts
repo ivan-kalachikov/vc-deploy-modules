@@ -1,3 +1,4 @@
+import { toRaw } from 'vue'
 import type { ConfigurationData, ModuleBase } from '../types'
 import { getModuleId } from '../utils/helpers'
 
@@ -8,7 +9,7 @@ export function useJsonGenerator() {
   ): string {
     if (!config) return ''
 
-    const newConfig = structuredClone(config)
+    const newConfig = JSON.parse(JSON.stringify(toRaw(config))) as ConfigurationData
 
     if (shouldSort) {
       newConfig.Sources = newConfig.Sources

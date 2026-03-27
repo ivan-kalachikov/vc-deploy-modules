@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 import { useStorage } from '@vueuse/core'
 import type { ConfigurationData, ModuleType, ModuleBase } from '../types'
 
@@ -23,7 +23,7 @@ export function useConfigState() {
   function updateModule(moduleId: string, type: ModuleType, value: string) {
     if (!config.value) return
 
-    const newConfig = structuredClone(config.value)
+    const newConfig = JSON.parse(JSON.stringify(toRaw(config.value))) as ConfigurationData
     const sourceIndex = newConfig.Sources.findIndex(
       (s: { Name: string }) => s.Name === type,
     )
