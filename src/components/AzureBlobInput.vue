@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onClickOutside } from '@vueuse/core'
 import type { ModuleViewModel } from '../types'
 import { isValidBlobName } from '../utils/validation'
 import { getRepoName } from '../config/moduleRepoMapping'
@@ -15,6 +16,7 @@ const emit = defineEmits<{
 }>()
 
 const { addToast } = useToast()
+const prPickerRef = ref<HTMLElement>()
 const prs = ref<PrInfo[]>()
 const isLoadingPrs = ref(false)
 const isLoadingArtifact = ref(false)
@@ -64,6 +66,8 @@ async function selectPr(prNumber: number) {
   }
 }
 
+onClickOutside(prPickerRef, () => { prs.value = undefined })
+
 const onInput = (e: Event) => emit('change', (e.target as HTMLInputElement).value)
 const onBlur = (e: Event) => { (e.target as HTMLInputElement).value = (e.target as HTMLInputElement).value.trim() }
 </script>
@@ -80,7 +84,7 @@ const onBlur = (e: Event) => { (e.target as HTMLInputElement).value = (e.target 
       @input="onInput"
       @blur="onBlur"
     />
-    <div class="pr-picker">
+    <div ref="prPickerRef" class="pr-picker">
       <button
         class="pr-button"
         :disabled="isLoadingPrs || isLoadingArtifact"
