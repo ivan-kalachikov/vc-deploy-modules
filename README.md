@@ -125,7 +125,7 @@ src/
 
 ## Contributing
 
-PRs welcome. For questions or suggestions, email [ivan.kalachikov@gmail.com](mailto:ivan.kalachikov@gmail.com).
+Issues and PRs welcome. For questions or suggestions, email [ivan.kalachikov@gmail.com](mailto:ivan.kalachikov@gmail.com).
 
 ## License
 
