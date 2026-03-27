@@ -5,8 +5,12 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VC Deploy Modules Manager</title>
+    <style>
+      html { background: #f0f2f5; }
+      html[data-theme="dark"] { background: #0d0d1a; }
+    </style>
   </head>
-  <body style="background:#f0f2f5">
+  <body>
     <script>
       // Apply theme before first paint to prevent flash
       (function() {
@@ -20,7 +24,6 @@
           resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.dataset.theme = resolved;
-        document.body.style.background = resolved === 'dark' ? '#0d0d1a' : '#f0f2f5';
       })();
     </script>
     <div id="app"></div>
