@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useUrlSearchParams } from '@vueuse/core'
 import { useConfigState } from './composables/useConfigState'
 import { useJsonGenerator } from './composables/useJsonGenerator'
 import { useDiffTracker } from './composables/useDiffTracker'
+import { useManifestLoader } from './composables/useManifestLoader'
 import JsonInput from './components/JsonInput.vue'
 import ModuleList from './components/ModuleList.vue'
 import PlatformConfig from './components/PlatformConfig.vue'
@@ -11,10 +11,10 @@ import JsonOutput from './components/JsonOutput.vue'
 import ThemeToggle from './components/ThemeToggle.vue'
 import ToastContainer from './components/ToastContainer.vue'
 
-const params = useUrlSearchParams('history')
 const { config, originalConfig, shouldSortModules, parseConfig, updateModule, updatePlatform } = useConfigState()
 const { generateJson } = useJsonGenerator()
 const { changes } = useDiffTracker(config, originalConfig)
+const { isLoading, error, fetchManifest, loadFromHistory, clearManifestUrl, getInitialUrl } = useManifestLoader()
 
 const showDiff = ref(true)
 const moduleListRef = ref<InstanceType<typeof ModuleList> | null>(null)
@@ -25,6 +25,14 @@ const json = computed(() => generateJson(config.value, shouldSortModules.value))
 const hasInvalidInputs = computed(() =>
   moduleListRef.value?.hasInvalidInputs || platformConfigRef.value?.hasInvalidInputs
 )
+
+// Determine initial state: if URL param exists, start fetching immediately
+const initialUrl = getInitialUrl()
+if (initialUrl) {
+  fetchManifest(initialUrl).then(text => {
+    if (text) parseConfig(text)
+  })
+}
 
 const scrollToFirstInvalidInput = () => {
   if (platformConfigRef.value?.hasInvalidInputs) {
@@ -43,14 +51,24 @@ const scrollToModule = (moduleId: string) => {
   }
 }
 
-const handleJsonSubmit = (jsonString: string) => {
-  parseConfig(jsonString)
+const handleJsonSubmit = (text: string) => {
+  parseConfig(text)
+}
+
+async function handleUrlSubmit(url: string) {
+  const text = await fetchManifest(url)
+  if (text) parseConfig(text)
+}
+
+async function handleHistoryClick(url: string) {
+  const text = await loadFromHistory(url)
+  if (text) parseConfig(text)
 }
 
 const handleBack = () => {
   config.value = null
   originalConfig.value = null
-  delete params['manifest-url']
+  clearManifestUrl()
 }
 </script>
 
@@ -64,10 +82,24 @@ const handleBack = () => {
       <ThemeToggle />
     </header>
 
-    <div v-if="!config" class="json-input-container">
-      <JsonInput v-model:sort-modules="shouldSortModules" @submit="handleJsonSubmit" />
+    <!-- Loading from URL param -->
+    <div v-if="isLoading && !config" class="loading-state">
+      <p>Loading manifest...</p>
     </div>
 
+    <!-- Input screen -->
+    <div v-else-if="!config" class="json-input-container">
+      <JsonInput
+        v-model:sort-modules="shouldSortModules"
+        :is-loading="isLoading"
+        :error="error"
+        @submit="handleJsonSubmit"
+        @fetch-url="handleUrlSubmit"
+        @history-click="handleHistoryClick"
+      />
+    </div>
+
+    <!-- Config screen -->
     <template v-else>
       <div class="main-layout">
         <div class="config-column">
@@ -135,6 +167,19 @@ h1 {
 .back-button:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: var(--border-secondary);
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+}
+
+.loading-state p {
+  color: var(--text-on-app);
+  font-size: 16px;
+  opacity: 0.7;
 }
 
 .json-input-container {

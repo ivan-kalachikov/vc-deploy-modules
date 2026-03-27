@@ -1,96 +1,31 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useUrlSearchParams } from '@vueuse/core'
 import { useManifestHistory } from '../composables/useManifestHistory'
-import { useToast } from '../composables/useToast'
 
 const sortModules = defineModel<boolean>('sortModules', { default: true })
 
-const params = useUrlSearchParams('history')
-const jsonInput = ref('')
-const jsonUrl = ref('')
-const isLoading = ref(false)
-const error = ref('')
-const { history, addEntry, removeEntry, touchEntry } = useManifestHistory()
-const { addToast } = useToast()
-
-// Read URL param synchronously for loading state
-const initialUrlParam = params['manifest-url']
-const initialUrl = Array.isArray(initialUrlParam) ? initialUrlParam[0] : initialUrlParam
-if (initialUrl) {
-  jsonUrl.value = initialUrl
-  isLoading.value = true
-}
+const props = defineProps<{
+  isLoading: boolean
+  error: string
+}>()
 
 const emit = defineEmits<{
   submit: [value: string]
+  'fetch-url': [url: string]
+  'history-click': [url: string]
 }>()
 
-const handleSubmit = () => {
-  if (!jsonInput.value.trim()) return
-  emit('submit', jsonInput.value)
-}
+const jsonInput = ref('')
+const jsonUrl = ref('')
+const { history, removeEntry } = useManifestHistory()
 
 const handleTextareaInput = (e: Event) => {
   jsonInput.value = (e.target as HTMLTextAreaElement).value
 }
-
-// Convert GitHub blob/tree URLs to raw.githubusercontent.com
-// e.g. https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json
-//   -> https://raw.githubusercontent.com/VirtoCommerce/vc-deploy-dev/vcst-dev/backend/packages.json
-function toRawUrl(url: string): string {
-  const ghMatch = url.match(
-    /^https?:\/\/github\.com\/([^/]+\/[^/]+)\/(?:blob|tree)\/(.+)$/,
-  )
-  if (ghMatch) return `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}`
-  return url
-}
-
-async function fetchAndSubmit(url: string) {
-  const trimmed = url.trim()
-  if (!trimmed) return
-
-  isLoading.value = true
-  error.value = ''
-  try {
-    const rawUrl = toRawUrl(trimmed)
-    const response = await fetch(rawUrl)
-    if (!response.ok) throw new Error(`HTTP ${response.status}`)
-    const text = await response.text()
-    JSON.parse(text) // validate
-    addEntry(trimmed) // store original URL, not raw
-    params['manifest-url'] = trimmed
-    emit('submit', text)
-  } catch (e) {
-    error.value = `Failed to fetch: ${(e as Error).message}`
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handleUrlSubmit = () => fetchAndSubmit(jsonUrl.value)
-
-function handleHistoryClick(url: string) {
-  touchEntry(url)
-  jsonUrl.value = url
-  params['manifest-url'] = url
-  fetchAndSubmit(url)
-}
-
-// Auto-fetch from URL param (must be after fetchAndSubmit is defined)
-if (initialUrl) {
-  fetchAndSubmit(initialUrl)
-}
 </script>
 
 <template>
-  <!-- Loading state when auto-fetching from URL param -->
-  <div v-if="isLoading && initialUrl" class="json-input loading-state">
-    <p>Loading manifest from URL...</p>
-  </div>
-
-  <div v-else class="json-input">
-    <!-- URL Input -->
+  <div class="json-input">
     <h2>Load from URL</h2>
     <div class="url-row">
       <input
@@ -98,19 +33,18 @@ if (initialUrl) {
         type="text"
         placeholder="https://example.com/packages.json"
         class="url-input"
-        @keyup.enter="handleUrlSubmit"
+        @keyup.enter="emit('fetch-url', jsonUrl)"
       />
-      <button type="button" :disabled="isLoading" @click="handleUrlSubmit">
+      <button type="button" :disabled="isLoading" @click="emit('fetch-url', jsonUrl)">
         {{ isLoading ? 'Loading...' : 'Fetch' }}
       </button>
     </div>
 
-    <!-- History -->
     <div v-if="history.length" class="history">
       <h3>History</h3>
       <ul>
         <li v-for="entry in history" :key="entry.url">
-          <button class="history-link" @click="handleHistoryClick(entry.url)" :title="entry.url">
+          <button class="history-link" @click="emit('history-click', entry.url)" :title="entry.url">
             {{ entry.label }}
           </button>
           <button class="history-delete" @click="removeEntry(entry.url)" title="Remove">&times;</button>
@@ -120,7 +54,6 @@ if (initialUrl) {
 
     <div v-if="error" class="error">{{ error }}</div>
 
-    <!-- Textarea -->
     <h2 class="paste-heading">Or paste JSON</h2>
     <textarea
       :value="jsonInput"
@@ -129,7 +62,7 @@ if (initialUrl) {
       @input="handleTextareaInput"
     />
     <div class="input-controls">
-      <button type="button" @click="handleSubmit">Load Configuration</button>
+      <button type="button" @click="jsonInput.trim() && emit('submit', jsonInput)">Load Configuration</button>
       <label class="sort-checkbox">
         <input type="checkbox" v-model="sortModules">
         Sort modules
@@ -150,19 +83,6 @@ h2 {
   margin-bottom: 16px;
   font-size: 22px;
   font-weight: 600;
-}
-
-.loading-state {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-}
-
-.loading-state p {
-  color: var(--text-on-app);
-  font-size: 16px;
-  opacity: 0.7;
 }
 
 .paste-heading {
@@ -194,7 +114,6 @@ h2 {
   color: var(--text-tertiary);
 }
 
-/* History */
 .history {
   margin-top: 16px;
 }
@@ -261,7 +180,6 @@ h2 {
   color: var(--error-text);
 }
 
-/* Textarea & controls */
 .json-input textarea {
   width: 100%;
   margin-bottom: 10px;
