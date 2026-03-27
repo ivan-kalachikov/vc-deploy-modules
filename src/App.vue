@@ -112,8 +112,9 @@ const handleCopy = async () => {
         <div class="sidebar">
           <div class="sidebar-actions">
             <button class="action-button" popovertarget="json-preview">Preview</button>
-            <button class="copy-button" @click="handleCopy">Copy JSON</button>
             <button class="reset-button" :disabled="!changes.length" @click="resetToOriginal">Reset</button>
+            <span class="spacer"></span>
+            <button class="copy-button" @click="handleCopy">Copy JSON</button>
           </div>
           <button
             v-if="hasInvalidInputs"
@@ -266,6 +267,11 @@ h1 {
 .sidebar-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
+}
+
+.sidebar-actions .spacer {
+  flex: 1;
 }
 
 .copy-button {
