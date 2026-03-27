@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useConfigState } from './composables/useConfigState'
 import { useJsonGenerator } from './composables/useJsonGenerator'
 import { useDiffTracker } from './composables/useDiffTracker'
@@ -64,6 +64,12 @@ async function handleHistoryClick(url: string) {
   const text = await loadFromHistory(url)
   if (text) parseConfig(text)
 }
+const showScrollTop = ref(false)
+const onScroll = () => { showScrollTop.value = window.scrollY > 300 }
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onUnmounted(() => window.removeEventListener('scroll', onScroll))
+const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+
 const handleBack = () => {
   config.value = null
   originalConfig.value = null
@@ -137,6 +143,7 @@ const handleCopy = async () => {
       </div>
     </div>
 
+    <button v-if="showScrollTop" class="scroll-top" @click="scrollToTop" title="Scroll to top">Top</button>
     <ToastContainer />
   </div>
 </template>
@@ -366,5 +373,25 @@ h1 {
 
 :deep(.highlight) {
   animation: highlight 2s ease-in-out;
+}
+
+.scroll-top {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 6px 12px;
+  background: var(--surface-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 50;
+}
+
+.scroll-top:hover {
+  background: var(--surface-tertiary);
+  color: var(--text-primary);
 }
 </style>
