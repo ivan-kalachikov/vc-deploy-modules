@@ -1,4 +1,4 @@
-# <img src="src/assets/logo.png" width="32" align="top"> Module Configuration Manager
+# <img src="src/assets/logo.png" width="48" align="top"> Module Configuration Manager
 
 [![Deploy](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml/badge.svg)](https://github.com/ivan-kalachikov/vc-deploy-modules/actions/workflows/deploy.yml) [![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)]()
 
