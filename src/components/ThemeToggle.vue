@@ -6,9 +6,13 @@ const { resolvedTheme, toggle } = useTheme()
 const isHovered = ref(false)
 const btnRef = ref<HTMLElement>()
 
+const isPopping = ref(false)
+
 function handleClick(e: MouseEvent) {
   toggle(e)
   isHovered.value = false
+  isPopping.value = true
+  setTimeout(() => { isPopping.value = false }, 800)
 }
 </script>
 
@@ -16,7 +20,7 @@ function handleClick(e: MouseEvent) {
   <button
     ref="btnRef"
     class="theme-toggle"
-    :class="[resolvedTheme, { hovered: isHovered }]"
+    :class="[resolvedTheme, { hovered: isHovered, popping: isPopping }]"
     :title="resolvedTheme === 'light' ? 'Switch to dark' : 'Switch to light'"
     @mouseenter="isHovered = true"
     @mouseleave="isHovered = false"
@@ -41,18 +45,26 @@ function handleClick(e: MouseEvent) {
   overflow: visible;
 }
 
-.theme-toggle:active {
-  transform: scale(0.7);
+.popping {
+  animation: pop-bounce 0.8s ease-out;
 }
 
-.light .theme-toggle:active,
-.light.theme-toggle:active {
-  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));
+.light.popping {
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.9));
 }
 
-.dark .theme-toggle:active,
-.dark.theme-toggle:active {
-  filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.8));
+.dark.popping {
+  filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.9));
+}
+
+@keyframes pop-bounce {
+  0% { transform: scale(1); }
+  15% { transform: scale(1.6) rotate(10deg); }
+  30% { transform: scale(1.3) rotate(-8deg); }
+  45% { transform: scale(1.45) rotate(5deg); }
+  60% { transform: scale(1.2) rotate(-3deg); }
+  75% { transform: scale(1.1) rotate(1deg); }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
 .icon {
