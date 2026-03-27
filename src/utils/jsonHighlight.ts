@@ -2,7 +2,7 @@ const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 
 export function highlightJson(json: string): string {
   return json.replace(
-    /("(?:\\.|[^"\\])*")\s*(:)?|(\b(?:true|false|null)\b)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([{}[\],])/g,
+    /("(?:\\.|[^"\\])*")[ \t]*(:)?|(\b(?:true|false|null)\b)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([{}[\],])/g,
     (match, str?: string, colon?: string, bool?: string, num?: string, punct?: string) => {
       if (str) {
         const escaped = esc(str)
