@@ -5,8 +5,24 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VC Deploy Modules Manager</title>
+    <link rel="stylesheet" href="/src/assets/tokens.css">
   </head>
   <body>
+    <script>
+      // Apply theme before first paint to prevent flash
+      (function() {
+        var stored = localStorage.getItem('theme-preference');
+        // useStorage wraps values in quotes
+        var theme = stored && stored.replace(/"/g, '');
+        var resolved;
+        if (theme === 'light' || theme === 'dark') {
+          resolved = theme;
+        } else {
+          resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = resolved;
+      })();
+    </script>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
