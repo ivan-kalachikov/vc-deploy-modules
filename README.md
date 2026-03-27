@@ -5,7 +5,7 @@
 Web GUI for editing VirtoCommerce deployment manifests (`packages.json`).
 Load a manifest from URL or paste it, edit module versions and sources visually, copy the result.
 
-[**Open app**](https://ivan-kalachikov.github.io/vc-deploy-modules/) | [**Open with vcst-dev manifest**](https://ivan-kalachikov.github.io/vc-deploy-modules/?manifest-url=https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json)
+[**Open app**](https://ivan-kalachikov.github.io/vc-deploy-modules/) | [**Open with vcst-dev manifest (example)**](https://ivan-kalachikov.github.io/vc-deploy-modules/?manifest-url=https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json)
 
 ---
 
