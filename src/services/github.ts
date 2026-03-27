@@ -1,5 +1,12 @@
 import { isValidVersion } from '../utils/validation'
 
+export class RateLimitError extends Error {
+  constructor(public retryAfterSeconds: number) {
+    super(`Rate limited. Retry after ${retryAfterSeconds}s`)
+    this.name = 'RateLimitError'
+  }
+}
+
 const GITHUB_TOKEN = import.meta.env.VITE_GITHUB_TOKEN as string | undefined
 
 function getHeaders(): Record<string, string> {
@@ -20,6 +27,11 @@ export async function fetchTags(repoName: string): Promise<string[]> {
       `https://api.github.com/repos/VirtoCommerce/${repoName}/tags?per_page=100&page=${page}`,
       { headers: getHeaders() },
     )
+    if (response.status === 403 || response.status === 429) {
+      const retryAfter = response.headers.get('retry-after')
+      const wait = retryAfter ? parseInt(retryAfter) : 60
+      throw new RateLimitError(wait)
+    }
     if (!response.ok) {
       throw new Error(`GitHub API returned ${response.status}: ${await response.text()}`)
     }

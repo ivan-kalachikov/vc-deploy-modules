@@ -1,12 +1,14 @@
 import { ref } from 'vue'
 import type { ModuleViewModel } from '../types'
 import { getCachedTags, setCachedTags } from '../services/tagCache'
-import { fetchTags } from '../services/github'
+import { fetchTags, RateLimitError } from '../services/github'
 import { getRepoName } from '../config/moduleRepoMapping'
+import { useToast } from './useToast'
 
 export function useModuleTags() {
   const isUpdatingAll = ref(false)
-  const updateProgress = ref({ current: 0, total: 0 })
+  const updateProgress = ref({ current: 0, total: 0, status: '' })
+  const { addToast } = useToast()
 
   async function loadTags(module: ModuleViewModel, forceRefresh = false) {
     module.isLoadingTags = true
@@ -47,29 +49,45 @@ export function useModuleTags() {
     if (githubModules.length === 0) return 0
 
     isUpdatingAll.value = true
-    updateProgress.value = { current: 0, total: githubModules.length }
+    updateProgress.value = { current: 0, total: githubModules.length, status: '' }
 
     let updatedCount = 0
 
     try {
       for (let i = 0; i < githubModules.length; i += batchSize) {
-        if (i > 0) await new Promise(r => setTimeout(r, 1000))
+        if (i > 0) await new Promise(r => setTimeout(r, 300))
         const batch = githubModules.slice(i, i + batchSize)
 
-        const results = await Promise.allSettled(
-          batch.map(async (module) => {
-            await loadTags(module, true)
-            if (module.tags?.length) {
-              onModuleUpdated(module.id, module.tags[0])
-              return true
-            }
-            return false
-          }),
-        )
+        try {
+          const results = await Promise.allSettled(
+            batch.map(async (module) => {
+              await loadTags(module, true)
+              if (module.tags?.length) {
+                onModuleUpdated(module.id, module.tags[0])
+                return true
+              }
+              return false
+            }),
+          )
 
-        for (const result of results) {
-          if (result.status === 'fulfilled' && result.value) updatedCount++
-          updateProgress.value.current++
+          const rateLimited = results.find(
+            r => r.status === 'rejected' && r.reason instanceof RateLimitError,
+          )
+
+          if (rateLimited && rateLimited.status === 'rejected') {
+            const wait = (rateLimited.reason as RateLimitError).retryAfterSeconds
+            updateProgress.value.status = `Rate limited — waiting ${wait}s then stopping...`
+            addToast(`GitHub rate limit hit. Updated ${updatedCount} modules before stopping. Try again in ${wait}s.`, 'error', wait * 1000)
+            break
+          }
+
+          for (const result of results) {
+            if (result.status === 'fulfilled' && result.value) updatedCount++
+            updateProgress.value.current++
+          }
+          updateProgress.value.status = ''
+        } catch {
+          updateProgress.value.status = ''
         }
       }
     } finally {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineProps<{
   isUpdating: boolean
-  progress: { current: number; total: number }
+  progress: { current: number; total: number; status: string }
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +25,7 @@ const emit = defineEmits<{
       ></div>
       <span class="progress-text">{{ progress.current }}/{{ progress.total }}</span>
     </div>
+    <span v-if="progress.status" class="progress-status">{{ progress.status }}</span>
   </div>
 </template>
 
@@ -80,5 +81,11 @@ const emit = defineEmits<{
   font-size: 12px;
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.progress-status {
+  font-size: 12px;
+  color: var(--error-text);
+  white-space: nowrap;
 }
 </style>
