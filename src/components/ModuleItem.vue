@@ -13,6 +13,7 @@ const emit = defineEmits<{
   'update': [moduleId: string, type: ModuleType, value: string]
   'move': [moduleId: string, fromType: ModuleType, toType: ModuleType]
   'revert': [moduleId: string, type: ModuleType]
+  'delete': [moduleId: string, type: ModuleType]
   'tags-loaded': [moduleId: string, tags: string[]]
 }>()
 
@@ -30,6 +31,11 @@ const isChanged = () =>
 
 <template>
   <div class="module-item">
+    <button
+      class="delete-button"
+      title="Remove module"
+      @click="emit('delete', module.id, sourceType)"
+    >&times;</button>
     <div class="module-info">
       <a
         :href="getGitHubRepoUrl(module.id)"
@@ -41,6 +47,12 @@ const isChanged = () =>
         {{ formatModuleId(module.id) }}
       </a>
     </div>
+    <button
+      class="revert-button revert-narrow"
+      :class="{ visible: isChanged() }"
+      title="Revert to original"
+      @click="emit('revert', module.id, sourceType)"
+    >&#x21A9;</button>
     <button
       class="source-toggle"
       :title="isGitHub() ? 'Move to Azure Blob' : 'Move to GitHub Releases'"
@@ -56,11 +68,11 @@ const isChanged = () =>
         />
       </div>
       <button
-        v-if="isChanged()"
-        class="revert-button"
+        class="revert-button revert-wide"
+        :class="{ visible: isChanged() }"
         title="Revert to original"
         @click="emit('revert', module.id, sourceType)"
-      >Undo</button>
+      >&#x21A9;</button>
     </div>
   </div>
 </template>
@@ -104,7 +116,7 @@ const isChanged = () =>
   display: flex;
   gap: 8px;
   align-items: center;
-  width: 70%;
+  flex: 1;
   min-width: 0;
 }
 
@@ -131,19 +143,56 @@ const isChanged = () =>
 }
 
 .revert-button {
-  padding: 4px 8px;
-  border: 1px solid var(--error-border);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
   border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--error-text);
-  font-size: 11px;
+  color: var(--text-tertiary);
+  font-size: 15px;
+  line-height: 24px;
+  text-align: center;
   cursor: pointer;
   transition: all var(--transition-fast);
-  white-space: nowrap;
+  flex-shrink: 0;
+  visibility: hidden;
 }
 
-.revert-button:hover {
+.revert-button.visible {
+  visibility: visible;
+}
+
+.revert-button.visible:hover {
+  color: var(--primary-text);
+  background: var(--surface-tertiary);
+}
+
+.delete-button {
+  width: 20px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 18px;
+  line-height: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  margin-right: -8px;
+}
+
+.delete-button:hover {
+  color: var(--error-text);
   background: var(--error-bg);
+}
+
+/* Wide: show in controls row, hide narrow version */
+.revert-narrow {
+  display: none;
 }
 
 @container (max-width: 500px) {
@@ -153,9 +202,31 @@ const isChanged = () =>
     padding: 8px;
   }
 
+  .delete-button {
+    order: 0;
+  }
+
   .module-info {
     width: auto;
     flex: 1;
+    order: 1;
+  }
+
+  .revert-narrow {
+    display: block;
+    order: 2;
+  }
+
+  .source-toggle {
+    order: 3;
+  }
+
+  .module-controls {
+    order: 4;
+  }
+
+  .revert-wide {
+    display: none;
   }
 
   .module-controls {

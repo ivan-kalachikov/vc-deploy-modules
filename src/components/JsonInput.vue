@@ -3,8 +3,6 @@ import { ref, computed } from 'vue'
 import { useManifestHistory } from '../composables/useManifestHistory'
 import { highlightJson } from '../utils/jsonHighlight'
 
-const sortModules = defineModel<boolean>('sortModules', { default: true })
-
 const props = defineProps<{
   isLoading: boolean
   error: string
@@ -51,6 +49,9 @@ const syncScroll = () => {
         {{ isLoading ? 'Loading...' : 'Fetch' }}
       </button>
     </div>
+    <p class="example-hint">
+      <small>Example: <a href="?manifest-url=https://github.com/VirtoCommerce/vc-deploy-dev/blob/vcst-dev/backend/packages.json">vcst-dev manifest</a></small>
+    </p>
 
     <div v-if="history.length" class="history">
       <h3>History</h3>
@@ -81,10 +82,6 @@ const syncScroll = () => {
     </div>
     <div class="input-controls">
       <button type="button" @click="jsonInput.trim() && emit('submit', jsonInput)">Load Configuration</button>
-      <label class="sort-checkbox">
-        <input type="checkbox" v-model="sortModules">
-        Sort modules
-      </label>
     </div>
   </div>
 </template>
@@ -110,6 +107,21 @@ h2 {
 .url-row {
   display: flex;
   gap: 8px;
+}
+
+.example-hint {
+  margin: 6px 0 0;
+  color: var(--text-tertiary);
+}
+
+.example-hint a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.example-hint a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
 }
 
 .url-input {
@@ -285,16 +297,4 @@ button:disabled {
   margin-top: 12px;
 }
 
-.sort-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-on-app);
-  cursor: pointer;
-  user-select: none;
-}
-
-.sort-checkbox input {
-  cursor: pointer;
-}
 </style>
