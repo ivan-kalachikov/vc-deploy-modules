@@ -35,9 +35,9 @@ Load a manifest from URL or paste it, edit module versions and sources visually,
 - Optional alphabetical sorting
 
 **UI**
-- Light / Dark / Auto theme
+- Light / Dark theme with animated transitions
 - Toast notifications
-- Rate limit handling
+- Rate limit handling with GitHub token support
 
 ---
 
@@ -74,6 +74,25 @@ Otherwise add one line to [`src/config/moduleRepoMapping.ts`](src/config/moduleR
 ```ts
 'VirtoCommerce.NewModule': 'vc-module-actual-repo-name',
 ```
+
+---
+
+## GitHub Token
+
+Without authentication the GitHub API allows 60 requests/hour. Setting a personal token raises this to 5,000 req/hour.
+
+**How to create a token:**
+1. Go to [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta)
+2. Create a **fine-grained token** scoped to your organization
+3. **No extra permissions needed** — default (public read) is sufficient
+4. Set expiration to 366 days or less (organization policy may enforce this)
+5. Paste the token in the app sidebar
+
+**Security notes:**
+- The token is stored in your browser's `localStorage` — it never leaves your machine and is never sent to any server other than `api.github.com`
+- Since no extra permissions are granted, the token only provides a higher rate limit for public API calls. Even in the unlikely event of an XSS compromise, the exposure is minimal
+- You can remove the token at any time from the sidebar
+- For maximum safety, use a dedicated token for this app and revoke it when no longer needed
 
 ---
 
