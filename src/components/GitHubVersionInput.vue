@@ -74,10 +74,21 @@ const onInputBlur = (e: Event) => {
   width: 100%;
 }
 
-.github-input-group input,
-.github-input-group select {
+.github-input-group input {
   flex: 1;
   padding: 8px 12px;
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: monospace;
+  background: var(--surface-card);
+  color: var(--text-primary);
+  min-width: 0;
+}
+
+.github-input-group select {
+  flex: 1;
+  padding: 8px 24px 8px 12px;
   border: 1px solid var(--border-secondary);
   border-radius: var(--radius-sm);
   font-size: 14px;
