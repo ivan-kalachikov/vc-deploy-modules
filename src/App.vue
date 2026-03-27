@@ -112,7 +112,7 @@ const handleCopy = async () => {
         <div class="sidebar">
           <div class="sidebar-actions">
             <button class="action-button" popovertarget="json-preview">Preview</button>
-            <button class="action-button" @click="handleCopy">Copy</button>
+            <button class="copy-button" @click="handleCopy">Copy JSON</button>
             <button class="reset-button" :disabled="!changes.length" @click="resetToOriginal">Reset</button>
           </div>
           <button
@@ -266,6 +266,22 @@ h1 {
 .sidebar-actions {
   display: flex;
   gap: 8px;
+}
+
+.copy-button {
+  padding: 6px 12px;
+  background: var(--primary);
+  color: var(--text-on-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.copy-button:hover {
+  background: var(--primary-hover);
 }
 
 .sidebar-error {
